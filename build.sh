@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 ARCH=${1}
 [ -z $ARCH ] && (echo "Usage: ./build.sh <arch=knl,avx512,avx2>"; exit -1)
 
@@ -28,7 +29,7 @@ source scripts/env.sh
 LOG_FILE=`pwd`/log/build_log/build-dynvec.log
 echo "Building DynVec (log file $LOG_FILE) ..."
 cd intelligent-unroll
-{ set -e; make -j > $LOG_FILE 2>&1; } && \
+{ set -e; make -j4 > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m DynVec build successfully! \033[0m" || \
             (echo -e "\033[31m DynVec build fail! \033[0m"; exit -1)
 cd $CUR_DIR
@@ -50,7 +51,7 @@ elif [ "$ARCH" == "avx2" ]; then
   cd CSR5_avx2
 fi
 
-{ set -e; make -j > $LOG_FILE 2>&1; } && \
+{ set -e; make -j4 > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m CSR5 build successfully! \033[0m" || \
             (echo -e "\033[31m CSR5 build fail! \033[0m"; exit -1)
 # copy out the binary
@@ -60,7 +61,7 @@ cd $CUR_DIR
 LOG_FILE=`pwd`/log/build_log/build-mkl.log
 echo "Building MKL SpMV benchmarks (log file $LOG_FILE)"
 cd spmv/spmv_mkl
-{ set -e; make -j > $LOG_FILE 2>&1; } && \
+{ set -e; make -j4 > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m MKL SpMV benchmarks build successfully! \033[0m" || \
             (echo -e "\033[31m MKL SpMV benchmarks build fail! \033[0m"; exit -1)
 cd $CUR_DIR
@@ -70,7 +71,7 @@ echo "Preparing artifacts for Page Rank ..."
 LOG_FILE=`pwd`/log/build_log/build-pagerank-icc.log
 echo "Building Page Rank basic implementation (log file $LOG_FILE)"
 cd page_rank/page_rank_base
-{ set -e; make -j > $LOG_FILE 2>&1; } && \
+{ set -e; make -j4 > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m Page Rank basic implementation build successfully! \033[0m" || \
             (echo -e "\033[31m Page Rank basic implementation build fail! \033[0m"; exit -1)
 cd $CUR_DIR
@@ -84,7 +85,7 @@ fi
 echo "+ Add Patching for GFlops profiling ..."
 patch page_rank_invec.cpp < ${CUR_DIR}/scripts/build_tools/patches/page_rank_invec.patch || true
 echo "+ Building ..."
-{ set -e; make -j > $LOG_FILE 2>&1; } && \
+{ set -e; make -j4 > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m Conflict-Free Page Rank implementation build successfully! \033[0m" || \
             (echo -e "\033[31m Conflict-Free Page Rank implementation build fail! \033[0m"; exit -1)
 cd ${CUR_DIR}

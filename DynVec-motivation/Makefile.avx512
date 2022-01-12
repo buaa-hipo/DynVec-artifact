@@ -9,6 +9,7 @@ scatter:
 	clang++ -DUSE_AVX512 -DUSE_DOUBLE scatter.cpp -o scatter.bc -c -S -emit-llvm -mavx512f -O3 && llc -mcpu=x86-64 -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx512f,+avx2,+avx,+fast-gather scatter.bc -o scatter.s && gcc scatter.s -O3 -o scatter.double
 
 run:
+	rm -rf data data-single data-double
 	mkdir -p data
 	./gather
 	./scatter
