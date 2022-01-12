@@ -1,0 +1,9 @@
+mx_data_less_than_1G
+papi-6.0.0.tar.gz
+papi-6.0.0
+llvm-8.0.0
+log
+*.o
+*.S
+*.s
+*.bc

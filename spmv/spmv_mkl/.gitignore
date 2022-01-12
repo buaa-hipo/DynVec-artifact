@@ -1,0 +1,3 @@
+*.o
+app
+data-haswell-spmv

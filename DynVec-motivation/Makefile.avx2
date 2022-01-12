@@ -1,0 +1,25 @@
+all: gather scatter
+
+gather:
+	clang++ gather.cpp -g -o gather.bc -c -S -emit-llvm -mavx2 -O3 && llc -mcpu=x86-64 -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx,+fast-gather gather.bc -o gather.s && gcc gather.s -O3 -o gather
+	clang++ -DUSE_DOUBLE gather.cpp -o gather.bc -c -S -emit-llvm -mavx2 -O3 && llc -mcpu=x86-64 -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx,+fast-gather gather.bc -o gather.s && gcc gather.s -O3 -o gather.double
+
+scatter:
+	clang++ -g scatter.cpp -o scatter.bc -c -S -emit-llvm -mavx2 -O3 && llc -mcpu=x86-64 -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx,+fast-gather scatter.bc -o scatter.s && gcc scatter.s -O3 -o scatter
+	clang++ -g -DUSE_DOUBLE scatter.cpp -o scatter.bc -c -S -emit-llvm -mavx2 -O3 && llc -mcpu=x86-64 -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx,+fast-gather scatter.bc -o scatter.s && gcc scatter.s -O3 -o scatter.double
+
+run:
+	mkdir -p data
+	./gather
+	./scatter
+	mv data data-single
+	mkdir -p data
+	./gather.double
+	./scatter.double
+	mv data data-double
+
+veryclean: clean
+	rm -rf data data-single data-double
+
+clean:
+	rm -rf *.bc *.s gather gather.double scatter scatter.double

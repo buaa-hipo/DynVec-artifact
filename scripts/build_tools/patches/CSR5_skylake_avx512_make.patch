@@ -1,0 +1,9 @@
+--- Makefile-old	2022-01-11 21:42:17.153790487 +0800
++++ Makefile	2022-01-11 21:40:44.108386348 +0800
+@@ -10,4 +10,5 @@
+ #export OMP_NUM_THREADS=236;export KMP_AFFINITY=default
+ 
+ phi:
+-	$(CC) -O3 -xMIC-AVX512 -qopenmp main.cpp -o spmv -D VALUE_TYPE=$(VALUE_TYPE) -D NUM_RUN=$(NUM_RUN)
++	#$(CC) -O3 -xMIC-AVX512 -qopenmp main.cpp -o spmv -D VALUE_TYPE=$(VALUE_TYPE) -D NUM_RUN=$(NUM_RUN)
++	$(CC) -O3 -xHost -qopenmp main.cpp -o spmv -D VALUE_TYPE=$(VALUE_TYPE) -D NUM_RUN=$(NUM_RUN)

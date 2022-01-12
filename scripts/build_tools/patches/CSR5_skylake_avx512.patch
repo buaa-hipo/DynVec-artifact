@@ -1,0 +1,10 @@
+--- main-old.cpp	2022-01-11 21:41:58.359708873 +0800
++++ main.cpp	2022-01-11 21:38:02.284682825 +0800
+@@ -1,6 +1,6 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+-#include <offload.h>
++//#include <offload.h>
+ 
+ #include <iostream>
+ #include <cmath>

@@ -1,0 +1,27 @@
+--- Makefile	2022-01-11 17:42:37.505686098 +0800
++++ Makefile.update	2022-01-11 18:09:11.282833626 +0800
+@@ -1,19 +1,19 @@
+ all: page_rank_serial page_rank_serial_notiling page_rank_grouping page_rank_invec page_rank_mask 
+ 
+ page_rank_serial_notiling:page_rank_serial_notiling.cpp
+-	icc -xMIC_AVX512 -std=c++11 -O3 -no-vec -o page_rank_serial_notiling page_rank_serial_notiling.cpp -w
++	icc -xHost -std=c++11 -O3 -no-vec -o page_rank_serial_notiling page_rank_serial_notiling.cpp -w
+ 
+ page_rank_serial:page_rank_serial.cpp
+-	icc -xMIC_AVX512 -std=c++11 -O3 -no-vec -o page_rank_serial page_rank_serial.cpp -w
++	icc -xHost -std=c++11 -O3 -no-vec -o page_rank_serial page_rank_serial.cpp -w
+ 
+ page_rank_invec:page_rank_invec.cpp
+-	icc -xMIC_AVX512 -std=c++11 -O3 -DMIC -I../../SSE_API_Package/SSE_Template/ -o page_rank_invec page_rank_invec.cpp -w 
++	icc -xHost -std=c++11 -O3 -DMIC -I../../SSE_API_Package/SSE_Template/ -o page_rank_invec page_rank_invec.cpp -w 
+ 
+ page_rank_mask:page_rank_mask.cpp
+-	icc -xMIC_AVX512 -std=c++11 -O3 -o page_rank_mask page_rank_mask.cpp -w 
++	icc -xHost -std=c++11 -O3 -o page_rank_mask page_rank_mask.cpp -w 
+ 
+ page_rank_grouping:page_rank_grouping.cpp
+-	icc -xMIC_AVX512 -std=c++11 -O3 -o page_rank_grouping page_rank_grouping.cpp -w 
++	icc -xHost -std=c++11 -O3 -o page_rank_grouping page_rank_grouping.cpp -w 
+ 
+ clean:
+ 	rm page_rank_serial_notiling page_rank_serial page_rank_grouping page_rank_invec page_rank_mask
