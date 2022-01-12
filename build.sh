@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-
 ARCH=${1}
 [ -z $ARCH ] && (echo "Usage: ./build.sh <arch=knl,avx512,avx2>"; exit -1)
 
@@ -24,6 +22,9 @@ sh scripts/build_tools/build-dependancy.sh $LOG_FILE && \
         echo -e "\033[32m Dependency build successfully! \033[0m" || \
             (echo -e "\033[31m Dependancy build fail! \033[0m"; exit -1)
 
+echo "Setting environments ..."
+source scripts/env.sh
+
 LOG_FILE=`pwd`/log/build_log/build-dynvec.log
 echo "Building DynVec (log file $LOG_FILE) ..."
 cd intelligent-unroll
@@ -41,8 +42,8 @@ cd spmv/Benchmark_SpMV_using_CSR5
 if [ "$ARCH" == "avx512" ]; then
   cd CSR5_avx512
   echo "Patching for skylake ..."
-  patch main.cpp < $CUR_DIR/scripts/build_tools/patches/CSR5_skylake_avx512.patch
-  patch Makefile < $CUR_DIR/scripts/build_tools/patches/CSR5_skylake_avx512_make.patch
+  patch main.cpp < $CUR_DIR/scripts/build_tools/patches/CSR5_skylake_avx512.patch || true
+  patch Makefile < $CUR_DIR/scripts/build_tools/patches/CSR5_skylake_avx512_make.patch || true
 elif [ "$ARCH" == "knl" ]; then
   cd CSR5_avx512
 elif [ "$ARCH" == "avx2" ]; then
@@ -52,6 +53,8 @@ fi
 { set -e; make -j > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m CSR5 build successfully! \033[0m" || \
             (echo -e "\033[31m CSR5 build fail! \033[0m"; exit -1)
+# copy out the binary
+cp spmv ../
 cd $CUR_DIR
 
 LOG_FILE=`pwd`/log/build_log/build-mkl.log
@@ -76,8 +79,10 @@ echo "Building Conflict-Free Page Rank implemenation (log file $LOG_FILE)"
 cd page_rank/conflict_free/graphs/page_rank
 if [ "$ARCH" == "avx512" ]; then
   echo "+ Add Patching for makefile ..."
-  patch Makefile < ${CUR_DIR}/scripts/build_tools/patches/conflict_free_make.patch
+  patch Makefile < ${CUR_DIR}/scripts/build_tools/patches/conflict_free_make.patch || true
 fi
+echo "+ Add Patching for GFlops profiling ..."
+patch page_rank_invec.cpp < ${CUR_DIR}/scripts/build_tools/patches/page_rank_invec.patch || true
 echo "+ Building ..."
 { set -e; make -j > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m Conflict-Free Page Rank implementation build successfully! \033[0m" || \

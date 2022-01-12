@@ -7,3 +7,11 @@ log
 *.S
 *.s
 *.bc
+data
+data.txt
+DynVec-motivation/gather
+DynVec-motivation/gather.double
+DynVec-motivation/scatter
+DynVec-motivation/scatter.double
+DynVec-motivation/data-double
+DynVec-motivation/data-single

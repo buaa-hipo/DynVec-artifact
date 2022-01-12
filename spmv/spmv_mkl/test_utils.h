@@ -13,6 +13,8 @@
     if(retval != val) { fprintf(stderr, "Error at %s:%d: %s, return val=%d\n", __FILE__, __LINE__, #stat, retval); exit(retval); }\
 } while(0)
 
+bool papi_initialized=false;
+
 int __PAPI_AVAIL_NUM = 0;
 int __PAPI_SLICE_NUM = 0;
 double* __PAPI_SLICE = NULL;
@@ -68,6 +70,12 @@ void papi_init() {
     }
     PAPI_PMU_MAX_NUM = i;
 
+    if(PAPI_PMU_MAX_NUM==0) {
+            printf("papi_init failed: PAPI_PMU_MAX_NUM == 0!\n");
+            printf("INFO: ignore PAPI collection!\n");
+            return;
+    }
+
     __PAPI_SLICE_NUM = (__PAPI_AVAIL_NUM+PAPI_PMU_MAX_NUM-1) / PAPI_PMU_MAX_NUM;
     __PAPI_SLICE = (double*)malloc(sizeof(double)*__PAPI_SLICE_NUM*PAPI_PMU_MAX_NUM);
     __PAPI_EVENT_SETS = (int*)malloc(sizeof(int)*__PAPI_SLICE_NUM);
@@ -92,9 +100,11 @@ void papi_init() {
             __PAPI_SLICE[idx] = 0.0;
         }
     }
+    papi_initialized = true;
 }
 
 void papi_fini() {
+    if(!papi_initialized) return;
     for(int i=0; i<__PAPI_SLICE_NUM; ++i) {
         PAPI_destroy_eventset(__PAPI_EVENT_SETS+i);
     }
@@ -165,12 +175,16 @@ std::vector<std::string> splitpath(
 
 #define PAPI_TEST_EVAL(WARM_TIMES, EVAL_TIMES, flops, name, stat) do {\
     for(int i=0;i<WARM_TIMES;++i) { stat; }\
-    for(int k=0;k<__PAPI_SLICE_NUM;++k) {\
+    if(!papi_initialized) {\
+      for(int i=0;i<EVAL_TIMES;++i) { stat; }\
+    } else {\
+      for(int k=0;k<__PAPI_SLICE_NUM;++k) {\
         /*printf("Running %d-th (total %d) event set...\n", k, __PAPI_SLICE_NUM);*/ \
         test_begin(k);\
         for(int i=0;i<EVAL_TIMES;++i) { stat; }\
         test_end(k, EVAL_TIMES);\
+      }\
+      test_output(name);\
     }\
-    test_output(name);\
 } while(0)
 

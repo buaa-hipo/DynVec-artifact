@@ -28,6 +28,10 @@ bool check_equal(const T * v1, const T * v2, const int num ) {
 }
 
 int main( int argv , char ** argc)  {
+    bool with_papi = false;
+    if(argv >= 3) {
+        with_papi = (atoi(argc[2])!=0);
+    }
     csrSparseMatrixPtr matrix = matrix_read_csr(argc[1]);
     int row_num = matrix->row_num;
     int column_num = matrix->column_num;
@@ -65,13 +69,19 @@ int main( int argv , char ** argc)  {
 
     Timer::printGFLOPS("mkl", (long long)data_num * 2 * 1000);
 
-    papi_init();
+    if(with_papi) {
+       papi_init();
+    } else {
+       printf("PAPI profiling is disabled.\n");
+    }
     std::string base_name(argc[1]);
     std::vector<std::string> path = splitpath(base_name);
     base_name = remove_extension(path.back());
     std::string mkl_name = base_name + std::string(".mkl");
     PAPI_TEST_EVAL(50, 1000, data_num*2*1000, mkl_name.c_str(), mkl_dcsrmv(trans , &row_num, &column_num, &alpha,matdescra, data_ptr, column_ptr, row_ptr, &row_ptr[1], x, &beta, y_timer) );
-    papi_fini();
+    if(with_papi) {
+        papi_fini();
+    }
 
 //    DetectionRecordPtr detection_record_ptr = analyse(row_ptr,data_num,row_num);
 //    csr_spmv_simd( data_ptr , column_ptr , x , y_ref , detection_record_ptr , detection_record_num );
