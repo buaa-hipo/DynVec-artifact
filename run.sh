@@ -9,7 +9,7 @@ source scripts/env.sh
 echo "-------- Evaluating motivation -------"
 echo "Log file: $RUNLOG_ROOT/motivation.log"
 cd DynVec-motivation
-#make -f Makefile.avx2 run > $RUNLOG_ROOT/motivation.log 2>&1
+make -f Makefile.avx2 run > $RUNLOG_ROOT/motivation.log 2>&1
 cd ${CUR_DIR}
 # prepare data for evaluation run
 sh scripts/run_tools/get_data.sh

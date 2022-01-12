@@ -9,6 +9,7 @@ log
 *.bc
 data
 data.txt
+data.tar.gz
 DynVec-motivation/gather
 DynVec-motivation/gather.double
 DynVec-motivation/scatter
