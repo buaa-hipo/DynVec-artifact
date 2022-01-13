@@ -13,7 +13,7 @@ else
   cd llvm-8.0.0
   mkdir -p build && cd build
   ../compiling.sh >> $LOG_FILE 2>&1
-  make -j install >> $LOG_FILE 2>&1
+  make -j4 install >> $LOG_FILE 2>&1
 fi
 
 if [ -d "papi-6.0.0/install" ]; then
@@ -27,7 +27,7 @@ else
   tar xvzf papi-6.0.0.tar.gz >> $LOG_FILE 2>&1
   cd papi-6.0.0/src
   CC=gcc CXX=g++ F77=gfortran ./configure --prefix=`pwd`/../install >> $LOG_FILE 2>&1
-  make -j >> $LOG_FILE 2>&1
+  make -j4 >> $LOG_FILE 2>&1
   make install >> $LOG_FILE 2>&1
 fi
 
