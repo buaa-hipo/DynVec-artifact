@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 ARCH=${1}
 [ -z $ARCH ] && (echo "Usage: ./build.sh <arch=knl,avx512,avx2>"; exit -1)
 
