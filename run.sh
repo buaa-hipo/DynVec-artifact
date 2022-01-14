@@ -30,28 +30,28 @@ mkdir -p $PAGERANK_LOG_ROOT
 # running SpMV evaluations
 echo "--------- Evaluating SpMV ---------"
 echo "Evaluating DynVec..."
-{ sh scripts/run_tools/spmv/run_dynvec.sh $SPMV_DATA $SPMV_LOG_ROOT > $SPMV_LOG_ROOT/run.log 2>&1; } && \
+{ set -e; sh scripts/run_tools/spmv/run_dynvec.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 echo "Evaluating CSR5..."
-{ sh scripts/run_tools/spmv/run_csr5.sh $SPMV_DATA $SPMV_LOG_ROOT > $SPMV_LOG_ROOT/run.log 2>&1; } && \
+{ set -e; sh scripts/run_tools/spmv/run_csr5.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 echo "Evaluating MKL..."
-{ sh scripts/run_tools/spmv/run_mkl.sh $SPMV_DATA $SPMV_LOG_ROOT > $SPMV_LOG_ROOT/run.log 2>&1; } && \
+{ set -e; sh scripts/run_tools/spmv/run_mkl.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 
 echo "--------- Evaluating Page Rank ---------"
 echo "Evaluating Baseline..."
-{ sh scripts/run_tools/pagerank/run_baseline.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT > $SPMV_LOG_ROOT/run.log 2>&1; } && \
+{ set -e; sh scripts/run_tools/pagerank/run_baseline.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 echo "Evaluating DynVec..."
-{ sh scripts/run_tools/pagerank/run_dynvec.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT > $SPMV_LOG_ROOT/run.log 2>&1; } && \
+{ set -e; sh scripts/run_tools/pagerank/run_dynvec.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 echo "Evaluating Conflict-Free..."
-{ sh scripts/run_tools/pagerank/run_conflice_free.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT > $SPMV_LOG_ROOT/run.log 2>&1; } && \
+{ set -e; sh scripts/run_tools/pagerank/run_conflice_free.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
