@@ -28,7 +28,7 @@ source scripts/env.sh
 
 LOG_FILE=`pwd`/log/build_log/build-dynvec.log
 echo "Building DynVec (log file $LOG_FILE) ..."
-cd intelligent-unroll
+cd spmv/DynVec
 { set -e; make -j4 > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m DynVec build successfully! \033[0m" || \
             (echo -e "\033[31m DynVec build fail! \033[0m"; exit -1)
@@ -67,30 +67,6 @@ cd spmv/spmv_mkl
         echo -e "\033[32m MKL SpMV benchmarks build successfully! \033[0m" || \
             (echo -e "\033[31m MKL SpMV benchmarks build fail! \033[0m"; exit -1)
 cd $CUR_DIR
-
-echo "Preparing artifacts for Page Rank ..."
-
-LOG_FILE=`pwd`/log/build_log/build-pagerank-icc.log
-echo "Building Page Rank basic implementation (log file $LOG_FILE)"
-cd page_rank/page_rank_base
-{ set -e; make -j4 > $LOG_FILE 2>&1; } && \
-        echo -e "\033[32m Page Rank basic implementation build successfully! \033[0m" || \
-            (echo -e "\033[31m Page Rank basic implementation build fail! \033[0m"; exit -1)
-cd $CUR_DIR
-
-echo "Building Conflict-Free Page Rank implemenation (log file $LOG_FILE)"
-cd page_rank/conflict_free/graphs/page_rank
-if [ "$ARCH" == "avx512" ]; then
-  echo "+ Add Patching for makefile ..."
-  patch Makefile < ${CUR_DIR}/scripts/build_tools/patches/conflict_free_make.patch || true
-fi
-echo "+ Add Patching for GFlops profiling ..."
-patch page_rank_invec.cpp < ${CUR_DIR}/scripts/build_tools/patches/page_rank_invec.patch || true
-echo "+ Building ..."
-{ set -e; make -j4 > $LOG_FILE 2>&1; } && \
-        echo -e "\033[32m Conflict-Free Page Rank implementation build successfully! \033[0m" || \
-            (echo -e "\033[31m Conflict-Free Page Rank implementation build fail! \033[0m"; exit -1)
-cd ${CUR_DIR}
 
 LOG_FILE=`pwd`/log/build_log/build-motivation.log
 echo "Building DynVec Motivation benchmarks (log file $LOG_FILE) ..."

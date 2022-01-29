@@ -41,17 +41,3 @@ echo "Evaluating MKL..."
 { set -e; sh scripts/run_tools/spmv/run_mkl.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
-
-echo "--------- Evaluating Page Rank ---------"
-echo "Evaluating Baseline..."
-{ set -e; sh scripts/run_tools/pagerank/run_baseline.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
-	echo -e "\033[32m Success! \033[0m" || \
-		(echo -e "\033[31m Failed! \033[0m"; exit -1)
-echo "Evaluating DynVec..."
-{ set -e; sh scripts/run_tools/pagerank/run_dynvec.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
-	echo -e "\033[32m Success! \033[0m" || \
-		(echo -e "\033[31m Failed! \033[0m"; exit -1)
-echo "Evaluating Conflict-Free..."
-{ set -e; sh scripts/run_tools/pagerank/run_conflice_free.sh $PAGERANK_DATA $PAGERANK_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
-	echo -e "\033[32m Success! \033[0m" || \
-		(echo -e "\033[31m Failed! \033[0m"; exit -1)
