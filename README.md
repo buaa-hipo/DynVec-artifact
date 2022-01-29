@@ -1,0 +1,33 @@
+# DynVec-artifact
+Evaluation scripts for DynVec
+
+## Build
+First, we need to clone the entire repo with compared CSR5 submodule:
+
+```
+git clone --recursive https://github.com/buaa-hipo/DynVec-artifact.git
+```
+
+After cloning the repo, use the build script to build the dependency, DynVec, CSR5 and motivation benchmarks:
+
+```
+./build.sh <knl,avx2,avx512>
+```
+
+Note that the build script will download and compiles llvm-8.0.0, which may take some time to finish.
+
+## Running SpMV
+
+To run spmv with prepared dataset (`data.tar.gz` in release), we just need to use the run script:
+
+```
+./run.sh
+```
+
+## Tested platforms
+
+- Intel Xeon E5-2620 v3 CPU (Haswell, build with `avx2`)
+- Intel Xeon E5-2680 v4 CPU (Broadwell, build with `avx2`)
+- Intel Xeon Gold 6126 CPU (Skylake, build with `avx512`)
+- Intel Xeon Platinum 9242 CPU (Cascade, build with `avx512`)
+- Intel Phi 7210 CPU (KNL, build with `knl`)
