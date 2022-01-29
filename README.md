@@ -1,5 +1,13 @@
 # DynVec-artifact
-Evaluation scripts for DynVec
+Implementation and evaluation scripts for DynVec
+
+## Code structure
+
+- `DynVec-motivation` includes the `gather`/`scatter` micro-benchmarks for motivating performance evalutions;
+- `scripts` includes the build/run tooling scripts to build/run all artifacts including ICC, DynVec, MKL, CSR5, and DynVec motivtions;
+- `spmv/Benchmark_SpMV_using_CSR5` is the implementations for CSR5 (as a submodule);
+- `spmv/spmv_mkl` contains the source codes to implement SpMV with MKL;
+- `spmv/DynVec` contains the DynVec source codes.
 
 ## Build
 First, we need to clone the entire repo with compared CSR5 submodule:
