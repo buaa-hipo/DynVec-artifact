@@ -12,6 +12,7 @@ Implementation and evaluation scripts for DynVec
 - `spmv/Benchmark_SpMV_using_CSR5` is the implementations for CSR5 (as a submodule);
 - `spmv/spmv_mkl` contains the source codes to implement SpMV with MKL;
 - `spmv/DynVec` contains the DynVec source codes.
+- `data.tar.gz` can be downloaded from release and it will be used in `run.sh` for SpMV evaluation.
 
 ## Build
 First, we need to clone the entire repo with compared CSR5 submodule:
