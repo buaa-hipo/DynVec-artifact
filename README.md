@@ -37,6 +37,8 @@ To run spmv with prepared dataset (`data.tar.gz` in release), we just need to us
 ./run.sh
 ```
 
+The results are stored in `log/run_log/spmv/log_spmv_*`.
+
 ## Tested platforms
 
 - Intel Xeon E5-2620 v3 CPU (Haswell, build with `avx2`)
