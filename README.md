@@ -1,6 +1,10 @@
 # DynVec-artifact
 Implementation and evaluation scripts for DynVec
 
+## Pre-requests
+
+- Intel oneAPI 2021.1 (other version is not tested)
+
 ## Code structure
 
 - `DynVec-motivation` includes the `gather`/`scatter` micro-benchmarks for motivating performance evalutions;
