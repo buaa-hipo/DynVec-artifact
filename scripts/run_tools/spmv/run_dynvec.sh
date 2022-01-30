@@ -8,11 +8,11 @@ ls $DATA_ROOT|xargs -n 1  echo $DATA_ROOT|sed "s/ //g" > data.txt
 DATA=`cat data.txt`
 echo "" > $LOG_FILE
 
-cd intelligent-unroll
+cd spmv/DynVec/
 
 for x in $DATA
 do
     ./spmv $x >> $LOG_FILE
 done
 
-cd ..
+cd ../..

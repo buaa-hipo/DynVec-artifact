@@ -22,11 +22,8 @@ sh scripts/run_tools/get_data.sh > $RUNLOG_ROOT/get_data.log 2>&1 && \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 
 SPMV_DATA=`pwd`/data/mx_data_less_than_1G/
-PAGERANK_DATA=`pwd`/data/pagerank_data/
 SPMV_LOG_ROOT=$RUNLOG_ROOT/spmv
-PAGERANK_LOG_ROOT=$RUNLOG_ROOT/pagerank
 mkdir -p $SPMV_LOG_ROOT
-mkdir -p $PAGERANK_LOG_ROOT
 # running SpMV evaluations
 echo "--------- Evaluating SpMV ---------"
 echo "Evaluating DynVec..."
