@@ -38,3 +38,7 @@ echo "Evaluating MKL..."
 { set -e; sh scripts/run_tools/spmv/run_mkl.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
+echo "Evaluating CVR..."
+{ set -e; sh scripts/run_tools/spmv/run_cvr.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
+	echo -e "\033[32m Success! \033[0m" || \
+		(echo -e "\033[31m Failed! \033[0m"; exit -1)
