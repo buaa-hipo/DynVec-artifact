@@ -36,6 +36,3 @@ index b590494..43909cf 100644
      std::cout<<endl;
    std::cout<<"==========================================================================="<<endl;
  }
-diff --git a/spmv.cvr b/spmv.cvr
-index b015a45..2175008 100755
-Binary files a/spmv.cvr and b/spmv.cvr differ

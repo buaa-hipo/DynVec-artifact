@@ -74,7 +74,7 @@ cd spmv/CVR
 if [ "$ARCH" == "avx2" ]; then
   echo -e "\033[31m CVR SPMV needs avx512 support! Skipping... \033[0m";
 else
-  patch spmv.cpp < $CUR_DIR/scripts/build_tools/patches/CVR.patch || true
+  git apply $CUR_DIR/scripts/build_tools/patches/CVR.patch || true
   { set -e; make -j > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m CVR build successfully! \033[0m" || \
             (echo -e "\033[31m CVR build fail! \033[0m"; exit -1)
