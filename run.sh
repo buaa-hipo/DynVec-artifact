@@ -14,7 +14,7 @@ make -f Makefile.avx2 run > $RUNLOG_ROOT/motivation.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 cd ${CUR_DIR}
-prepare data for evaluation run
+# prepare data for evaluation run
 echo "-------- Preparing data --------"
 echo "Log file: $RUNLOG_ROOT/get_data.log"
 sh scripts/run_tools/get_data.sh > $RUNLOG_ROOT/get_data.log 2>&1 && \
