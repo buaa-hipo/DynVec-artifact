@@ -3,4 +3,4 @@
 	url = https://github.com/weifengliu-ssslab/Benchmark_SpMV_using_CSR5.git
 [submodule "spmv/CVR"]
 	path = spmv/CVR
-	url = git@github.com:puckbee/CVR.git
+	url = https://github.com/puckbee/CVR.git
