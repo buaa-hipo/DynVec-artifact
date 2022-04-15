@@ -91,14 +91,11 @@ def extract_cvr(path_log):
     begin = "-----"
     log_file = open(path_log)
     text = log_file.read()
-    results = re.findall("Warning.*|correct|Segmentation fault", text);
+    results = re.findall("Warning.*|correct|Sorry.*", text);
     names = re.findall(r"File Path:[^\n]*mx_data_less_than_1G/(.+).mtx", text)
     preprocessing_times = re.findall(r"Pre-processing\(CSR->CVR\)   Time of CVR   is ([-0-9.e]+) seconds", text)
     spmv_times = re.findall(r"Execution Time of CVR    is ([-0-9.e]+) seconds", text)
     throughputs = re.findall(r"Throughput of CVR    is ([-0-9.e]+) GFlops", text) 
-    # assert(len(name) == len(preprocessing_times))
-    # assert(len(preprocessing_times) == len(spmv_times))
-    # assert(len(spmv_times) == len(throughputs))
     data = []
     timeptr = 0
     for i in range(len(names)):
@@ -106,8 +103,8 @@ def extract_cvr(path_log):
             print("len(names) != len(results), is the test going on?")
             break
         item = {}
-        valid = results[i] != "Segmentation fault"
-        if not valid:
+        invalid = results[i].startswith("Sorry")
+        if invalid:
             continue
         item['status'] = results[i]
         item['name'] = names[i]
@@ -117,7 +114,7 @@ def extract_cvr(path_log):
         timeptr += 1
         data.append(item)
     # print(json.dumps(data, indent=2))
-    print(len(names), len(preprocessing_times), len(spmv_times), len(throughputs), len(results), len(data))
+    # print(len(names), len(preprocessing_times), len(spmv_times), len(throughputs), len(results), len(data))
     return data
 
 def extract_mkl(path_log):

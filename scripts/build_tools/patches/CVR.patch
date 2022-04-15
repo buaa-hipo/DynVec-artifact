@@ -1,5 +1,17 @@
+diff --git a/Makefile b/Makefile
+index ac04e03..6743264 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,7 @@
+ 
+ all: spmv.cpp
+ 	icpc -O3 -ansi -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -o spmv.cvr
++#	icpc -O3 -ansi -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -o spmv.cvr
+ #	icpc -O3 -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -DMMAP -o spmv.ours.mmap
+ #	icpc -O3 -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -DNITERS=100 -o spmv.ours.100
+ #	icpc -O3 -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -DNITERS=100 -DMMAP -o spmv.ours.mmap.100
 diff --git a/spmv.cpp b/spmv.cpp
-index b590494..43909cf 100644
+index b590494..518bab0 100644
 --- a/spmv.cpp
 +++ b/spmv.cpp
 @@ -4,6 +4,8 @@
@@ -11,7 +23,16 @@ index b590494..43909cf 100644
  #include <stdio.h>
  #include <stdlib.h>
  #include <string.h>
-@@ -1021,7 +1023,7 @@ void spmv_compute_kernel(int Nthrds, int N_start, int N_step, int* vPack_Nblock,
+@@ -362,6 +364,8 @@ void readMatrix(char *filename, floatType **val_ptr, int **cols_ptr,
+ 
+ 	if (strcmp(field, "complex") == 0)
+ 	{
++      printf("Sorry, data type 'COMPLEX' is not supported. \n" );
++      exit(1);
+         field_complex = 1;
+ 	}
+ 
+@@ -1021,7 +1025,7 @@ void spmv_compute_kernel(int Nthrds, int N_start, int N_step, int* vPack_Nblock,
      std::cout<<endl;
     double tt2 = 0;
  
@@ -20,7 +41,7 @@ index b590494..43909cf 100644
  {
  #pragma omp parallel num_threads(Nthrds)
  //#pragma omp parallel for
-@@ -1655,13 +1657,13 @@ if(ncsr>=0)
+@@ -1655,13 +1659,13 @@ if(ncsr>=0)
  }
     double ttmp = microtime()-tt1;
     //std::cout<<" work time is "<<ttmp<<endl;

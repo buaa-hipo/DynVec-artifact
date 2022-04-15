@@ -74,13 +74,7 @@ cd spmv/CVR
 if [ "$ARCH" == "avx2" ]; then
   echo -e "\033[31m CVR SPMV needs avx512 support! Skipping... \033[0m";
 elif [ "$ARCH" == "knl" ]; then
-  echo "Patching for KNL ..."
-  git apply $CUR_DIR/scripts/build_tools/patches/CVR_KNL.patch || true
-  { set -e; make -j > $LOG_FILE 2>&1; } && \
-        echo -e "\033[32m CVR build successfully! \033[0m" || \
-            (echo -e "\033[31m CVR build fail! \033[0m"; exit -1)
-elif [ "$ARCH" == "avx512" ]; then
-  echo "Patching for skylake ..."
+  echo "Patching CVR ..."
   git apply $CUR_DIR/scripts/build_tools/patches/CVR.patch || true
   { set -e; make -j > $LOG_FILE 2>&1; } && \
         echo -e "\033[32m CVR build successfully! \033[0m" || \
