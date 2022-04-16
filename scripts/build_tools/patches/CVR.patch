@@ -1,11 +1,12 @@
 diff --git a/Makefile b/Makefile
-index ac04e03..6743264 100644
+index ac04e03..1c74a5d 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -1,6 +1,7 @@
  
  all: spmv.cpp
- 	icpc -O3 -ansi -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -o spmv.cvr
+-	icpc -O3 -ansi -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -o spmv.cvr
++	icpc -O3 -ansi -ansi-alias -xHost -qopenmp spmv.cpp -o spmv.cvr
 +#	icpc -O3 -ansi -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -o spmv.cvr
  #	icpc -O3 -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -DMMAP -o spmv.ours.mmap
  #	icpc -O3 -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -DNITERS=100 -o spmv.ours.100

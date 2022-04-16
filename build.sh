@@ -73,7 +73,7 @@ echo "Building CVR (log file $LOG_FILE) ..."
 cd spmv/CVR
 if [ "$ARCH" == "avx2" ]; then
   echo -e "\033[31m CVR SPMV needs avx512 support! Skipping... \033[0m";
-elif [ "$ARCH" == "knl" ]; then
+else
   echo "Patching CVR ..."
   git apply $CUR_DIR/scripts/build_tools/patches/CVR.patch || true
   { set -e; make -j > $LOG_FILE 2>&1; } && \
