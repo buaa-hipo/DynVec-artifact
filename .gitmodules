@@ -1,3 +1,6 @@
 [submodule "spmv/Benchmark_SpMV_using_CSR5"]
 	path = spmv/Benchmark_SpMV_using_CSR5
 	url = https://github.com/weifengliu-ssslab/Benchmark_SpMV_using_CSR5.git
+[submodule "spmv/CVR"]
+	path = spmv/CVR
+	url = https://github.com/puckbee/CVR.git

@@ -1,0 +1,60 @@
+diff --git a/Makefile b/Makefile
+index ac04e03..1c74a5d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,7 @@
+ 
+ all: spmv.cpp
+-	icpc -O3 -ansi -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -o spmv.cvr
++	icpc -O3 -ansi -ansi-alias -xHost -qopenmp spmv.cpp -o spmv.cvr
++#	icpc -O3 -ansi -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -o spmv.cvr
+ #	icpc -O3 -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -DMMAP -o spmv.ours.mmap
+ #	icpc -O3 -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -DNITERS=100 -o spmv.ours.100
+ #	icpc -O3 -ansi-alias -xMIC-AVX512 -qopenmp spmv.cpp -DNITERS=100 -DMMAP -o spmv.ours.mmap.100
+diff --git a/spmv.cpp b/spmv.cpp
+index b590494..518bab0 100644
+--- a/spmv.cpp
++++ b/spmv.cpp
+@@ -4,6 +4,8 @@
+ // When N = 256000000
+ //  Elapsed Time is 2.405552
+ 
++#define WARMUP_ROUND 50
++
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -362,6 +364,8 @@ void readMatrix(char *filename, floatType **val_ptr, int **cols_ptr,
+ 
+ 	if (strcmp(field, "complex") == 0)
+ 	{
++      printf("Sorry, data type 'COMPLEX' is not supported. \n" );
++      exit(1);
+         field_complex = 1;
+ 	}
+ 
+@@ -1021,7 +1025,7 @@ void spmv_compute_kernel(int Nthrds, int N_start, int N_step, int* vPack_Nblock,
+     std::cout<<endl;
+    double tt2 = 0;
+ 
+-  for(int ttk =0; ttk < Ntimes; ttk++)
++  for(int ttk =0; ttk < Ntimes + WARMUP_ROUND; ttk++)
+ {
+ #pragma omp parallel num_threads(Nthrds)
+ //#pragma omp parallel for
+@@ -1655,13 +1659,13 @@ if(ncsr>=0)
+ }
+    double ttmp = microtime()-tt1;
+    //std::cout<<" work time is "<<ttmp<<endl;
+-   tt2 += ttmp;
++   tt2 += (ttk >= WARMUP_ROUND) ? ttmp : 0;
+ }
+ //   std::cout<<" average work time is "<<tt2/Ntimes<<endl;
+ //   std::cout<<"The SpMV execution Time of CVR is  "<<filename<<" "<<tt2/Ntimes<<" seconds"<<endl;
+    std::cout<<"The SpMV Execution Time of CVR    is "<<tt2/Ntimes<<" seconds.   [file: "<<filename<<"] [threads: "<<Nthrds<<"]"<<endl;
+ //   std::cout<<endl;
+-   std::cout<<"         The Throughput of CVR    is "<<nItems/(tt2/Ntimes)/1000000/1000<< " GFlops.    [file: "<<filename<<"] [threads: "<<Nthrds<<"]"<<endl;
++   std::cout<<"         The Throughput of CVR    is "<<2*nItems/(tt2/Ntimes)/1000000/1000<< " GFlops.    [file: "<<filename<<"] [threads: "<<Nthrds<<"]"<<endl;
+     std::cout<<endl;
+   std::cout<<"==========================================================================="<<endl;
+ }

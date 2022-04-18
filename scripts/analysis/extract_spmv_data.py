@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import os
 import re
+import json
 from sys import argv
 
 def extract_dynvec(path_log):
@@ -86,6 +87,36 @@ def extract_csr5(path_log):
             i = i + 1
     return name, perf
 
+def extract_cvr(path_log):
+    begin = "-----"
+    log_file = open(path_log)
+    text = log_file.read()
+    results = re.findall("Warning.*|correct|Sorry.*", text);
+    names = re.findall(r"File Path:[^\n]*mx_data_less_than_1G/(.+).mtx", text)
+    preprocessing_times = re.findall(r"Pre-processing\(CSR->CVR\)   Time of CVR   is ([-0-9.e]+) seconds", text)
+    spmv_times = re.findall(r"Execution Time of CVR    is ([-0-9.e]+) seconds", text)
+    throughputs = re.findall(r"Throughput of CVR    is ([-0-9.e]+) GFlops", text) 
+    data = []
+    timeptr = 0
+    for i in range(len(names)):
+        if (i == len(names) - 1) and (len(names) != len(results)):
+            print("len(names) != len(results), is the test going on?")
+            break
+        item = {}
+        invalid = results[i].startswith("Sorry")
+        if invalid:
+            continue
+        item['status'] = results[i]
+        item['name'] = names[i]
+        item['preprocessing_time'] = preprocessing_times[timeptr]
+        item['spmv_time'] = spmv_times[timeptr]
+        item['throughput'] = throughputs[timeptr]
+        timeptr += 1
+        data.append(item)
+    # print(json.dumps(data, indent=2))
+    # print(len(names), len(preprocessing_times), len(spmv_times), len(throughputs), len(results), len(data))
+    return data
+
 def extract_mkl(path_log):
     name = []
     perf = []
@@ -132,6 +163,13 @@ def cache_dynvec(data, root_path):
     cache((data['name'],data['aot']), root_path+"/icc.dat")
     cache((data['name'],data['overhead']), root_path+"/dynvec_overhead.dat")
 
+def cache_cvr(data, root_path):
+    names = list(map(lambda x: x['name'], data))
+    preprocessing_times = list(map(lambda x: float(x['preprocessing_time']), data))
+    perfs = list(map(lambda x: float(x['throughput']), data))
+    cache((names,perfs), root_path+"/cvr.dat")
+    cache((names,preprocessing_times), root_path+"/cvr_overhead.dat")
+
 if __name__ == "__main__":
     log_root = argv[1]
     print("Extracting DynVec Data ...")
@@ -143,3 +181,6 @@ if __name__ == "__main__":
     print("Extracting MKL Data ...")
     data_mkl = extract_mkl(log_root+"/log_spmv_mkl")
     cache(data_mkl, log_root+"/mkl.dat")
+    print("Extracting CVR Data ...")
+    data_cvr = extract_cvr(log_root+"/log_spmv_cvr")
+    cache_cvr(data_cvr, log_root)
