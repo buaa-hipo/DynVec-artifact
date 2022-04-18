@@ -40,10 +40,11 @@ echo "Evaluating MKL..."
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 
 echo "Evaluating CVR..."
-if [ -x spmv/CVR/spmv.cvr ]; then
+result=`lscpu | grep -i -o avx512`
+if [ "$result" != "" ]; then
 	{ set -e; sh scripts/run_tools/spmv/run_cvr.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 		echo -e "\033[32m Success! \033[0m" || \
 			(echo -e "\033[31m Failed! \033[0m"; exit -1)
 else
-    echo "No spmv.cvr executable found, maybe host doesn't support avx512, skipping..."
+    echo "CVR must be run on machines with AVX512 support, skipping..."
 fi
