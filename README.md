@@ -10,6 +10,7 @@ Implementation and evaluation scripts for DynVec
 - `DynVec-motivation` includes the `gather`/`scatter` micro-benchmarks for motivating performance evalutions;
 - `scripts` includes the build/run tooling scripts to build/run all artifacts including ICC, DynVec, MKL, CSR5, and DynVec motivtions;
 - `spmv/Benchmark_SpMV_using_CSR5` is the implementations for CSR5 (as a submodule);
+- `spmv/CVR` is the implementations for CVR on AVX512 platforms (as a submodule);
 - `spmv/spmv_mkl` contains the source codes to implement SpMV with MKL;
 - `spmv/DynVec` contains the DynVec source codes.
 - `data.tar.gz` can be downloaded from [here](https://1drv.ms/u/s!AsGTYrgSALbmo-cjP_ukT2rtoAp2Iw?e=7ufdpw) and it will be used in `run.sh` for SpMV evaluation.
