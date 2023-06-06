@@ -14,6 +14,8 @@
 #include <llvm-c/Target.h>
 #include <llvm-c/Analysis.h>
 #include <llvm-c/BitWriter.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
 
 
 class LLVMModule  {
@@ -76,7 +78,7 @@ class LLVMModule  {
         llvm::legacy::PassManager pass;
         if( format == "asm" ) {
             CHECK(tm_->addPassesToEmitFile(
-                pass, rso, nullptr, llvm::TargetMachine::CGFT_AssemblyFile) == 0)
+                pass, rso, nullptr, llvm::CGFT_AssemblyFile) == 0)
               << "Cannot emit target CGFT_AssemblyFile";
             pass.run(*llvm::CloneModule(*mptr_));
             return rso.str().str();
@@ -181,6 +183,8 @@ class LLVMModule  {
   std::unique_ptr<llvm::TargetMachine> tm_{nullptr};
   // The module, can be moved to ee if JIT is enabled.
   std::unique_ptr<llvm::Module> module_;
+  llvm::orc::ThreadSafeModule tsMoudle_;
+  llvm::orc::ThreadSafeContext tsCtx_;
   // the context.
   std::unique_ptr<llvm::LLVMContext> ctx_;
 };

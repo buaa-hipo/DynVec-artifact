@@ -515,6 +515,7 @@ int parse_expression(
 
             return vector_bits / max_bits_;
             #else
+            #error  "Unsupported architetures"
             LOG(FATAL) << "Unsupported architetures";
             #endif
         #endif

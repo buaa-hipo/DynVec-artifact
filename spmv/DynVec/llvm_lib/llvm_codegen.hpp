@@ -1,5 +1,7 @@
 #ifndef LLVM_CODEGEN_HPP
 #define LLVM_CODEGEN_HPP
+#include <llvm/IR/Type.h>
+#include <llvm/IR/IntrinsicsX86.h>
 #include "statement.hpp"
 #include <map>
 #include "llvm_lib/llvm_common.h"
@@ -17,7 +19,8 @@
  
 class LLVMCodeGen {
     //const int lanes_ = VECTOR;
-    const int vector_;
+    const int vector__;
+    llvm::ElementCount vector_;
     const int alinements_ = 64;
     using Value = llvm::Value;
     using Function = llvm::Function;
@@ -114,6 +117,7 @@ class LLVMCodeGen {
     llvm::Constant * SixTeen_;
 
     std::map< Varience*,Value*> var_val_map_;
+    llvm::Type * Type2LLVMTypeRemovePointer(const Type & type) ;
     llvm::Type * Type2LLVMType(const Type & type) ;
 
     llvm::Value * LLVMBroadCast( llvm::Value * value, const int lanes) ;

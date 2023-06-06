@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <papi.h>
+//#include <papi.h>
 #include "Timers.hpp"
 #include <stdint.h>
 #include <string>
@@ -27,104 +27,104 @@ int PAPI_PMU_MAX_NUM;
     if(ptr) { free(ptr); ptr=NULL; } \
 } while(0)
 
-static bool is_derived( PAPI_event_info_t * info ) {
-    if ( strlen( info->derived ) == 0 )
-        return false;
-    else if ( strcmp( info->derived, "NOT_DERIVED" ) == 0 )
-        return false;
-    else if ( strcmp( info->derived, "DERIVED_CMPD" ) == 0 )
-        return false;
-    else
-        return true;
-}
-
-void papi_init() {
-    CHECK_PAPI_VALID(PAPI_library_init( PAPI_VER_CURRENT ), PAPI_VER_CURRENT);
-    // split all available papi events into several subsets
-    std::vector<int> event_codes;
-    int event = 0 | PAPI_PRESET_MASK;
-    int num = PAPI_get_opt( PAPI_MAX_HWCTRS, NULL );
-    CHECK_PAPI_VALID(PAPI_enum_event( &event, PAPI_ENUM_FIRST ), PAPI_OK);
-    PAPI_event_info_t info;
-    do {
-        int retval = PAPI_get_event_info(event, &info);
-        if (retval == PAPI_OK && !is_derived(&info)) {
-            event_names.push_back(info.symbol);
-            event_codes.push_back(info.event_code);
-            // printf("Collecting event: %x: %s\n", event, info.symbol);
-        }
-    } while (PAPI_enum_event(&event, PAPI_PRESET_ENUM_AVAIL) == PAPI_OK);
-    __PAPI_AVAIL_NUM = event_codes.size();
-    assert(__PAPI_AVAIL_NUM>0);
-
-    int i;
-    int EventSet = PAPI_NULL;
-    CHECK_PAPI_VALID( PAPI_create_eventset(&EventSet), PAPI_OK );
-    for(i=0;i<num && i<__PAPI_AVAIL_NUM;++i) {
-        int retval = PAPI_add_event(EventSet, event_codes[i]);
-        if(retval!=PAPI_OK) {
-            break;
-        }
-    }
-    PAPI_PMU_MAX_NUM = i;
-
-    if(PAPI_PMU_MAX_NUM==0) {
-	    printf("papi_init failed: PAPI_PMU_MAX_NUM == 0!\n");
-	    printf("INFO: ignore PAPI collection!\n");
-	    return;
-    }
-
-    __PAPI_SLICE_NUM = (__PAPI_AVAIL_NUM+PAPI_PMU_MAX_NUM-1) / PAPI_PMU_MAX_NUM;
-    __PAPI_SLICE = (double*)malloc(sizeof(double)*__PAPI_SLICE_NUM*PAPI_PMU_MAX_NUM);
-    __PAPI_EVENT_SETS = (int*)malloc(sizeof(int)*__PAPI_SLICE_NUM);
-    assert(__PAPI_SLICE != NULL);
-    assert(__PAPI_EVENT_SETS != NULL);
-
-    __PAPI_SLICE[0] = 0.0;
-    __PAPI_EVENT_SETS[0] = EventSet;
-
-    printf("Available number of hardware counters: %d\n", PAPI_PMU_MAX_NUM);
-    printf("PAPI Avail Event Num = %d\n", __PAPI_AVAIL_NUM);
-    printf("Number of tests need for collecting all PAPI counter values: %d\n", __PAPI_SLICE_NUM);
-
-    for(i=1; i<__PAPI_SLICE_NUM; ++i) {
-        __PAPI_EVENT_SETS[i] = PAPI_NULL;
-        CHECK_PAPI_VALID( PAPI_create_eventset(__PAPI_EVENT_SETS+i), PAPI_OK );
-        for(int k=0; k<PAPI_PMU_MAX_NUM; ++k) {
-            uint32_t idx = i*PAPI_PMU_MAX_NUM+k;
-            if(idx < event_codes.size()) {
-                CHECK_PAPI_VALID( PAPI_add_event(__PAPI_EVENT_SETS[i], event_codes[idx]), PAPI_OK );
-            }
-            __PAPI_SLICE[idx] = 0.0;
-        }
-    }
-    papi_initialized = true;
-}
-
-void papi_fini() {
-    if(papi_initialized) {
-      for(int i=0; i<__PAPI_SLICE_NUM; ++i) {
-        PAPI_destroy_eventset(__PAPI_EVENT_SETS+i);
-      }
-      __PAPI_SLICE_NUM = 0;
-      __PAPI_AVAIL_NUM = 0;
-      SAFE_FREE(__PAPI_SLICE);
-      SAFE_FREE(__PAPI_EVENT_SETS);
-    }
-}
-
-void test_begin(int i) {
-    CHECK_PAPI_VALID(PAPI_start( __PAPI_EVENT_SETS[i] ), PAPI_OK);
-}
-
-void test_end(int i, int scale) {
-    long long int value[MAX_PMU_NUM] = {0};
-    CHECK_PAPI_VALID(PAPI_stop( __PAPI_EVENT_SETS[i], value ), PAPI_OK);
-    double* cur_papi_slice = __PAPI_SLICE + i*PAPI_PMU_MAX_NUM;
-    for(int k=0; k<PAPI_PMU_MAX_NUM; ++k) {
-        cur_papi_slice[k] = (double)value[k] / (double)scale;
-    }
-}
+//static bool is_derived( PAPI_event_info_t * info ) {
+//    if ( strlen( info->derived ) == 0 )
+//        return false;
+//    else if ( strcmp( info->derived, "NOT_DERIVED" ) == 0 )
+//        return false;
+//    else if ( strcmp( info->derived, "DERIVED_CMPD" ) == 0 )
+//        return false;
+//    else
+//        return true;
+//}
+//
+//void papi_init() {
+//    CHECK_PAPI_VALID(PAPI_library_init( PAPI_VER_CURRENT ), PAPI_VER_CURRENT);
+//    // split all available papi events into several subsets
+//    std::vector<int> event_codes;
+//    int event = 0 | PAPI_PRESET_MASK;
+//    int num = PAPI_get_opt( PAPI_MAX_HWCTRS, NULL );
+//    CHECK_PAPI_VALID(PAPI_enum_event( &event, PAPI_ENUM_FIRST ), PAPI_OK);
+//    PAPI_event_info_t info;
+//    do {
+//        int retval = PAPI_get_event_info(event, &info);
+//        if (retval == PAPI_OK && !is_derived(&info)) {
+//            event_names.push_back(info.symbol);
+//            event_codes.push_back(info.event_code);
+//            // printf("Collecting event: %x: %s\n", event, info.symbol);
+//        }
+//    } while (PAPI_enum_event(&event, PAPI_PRESET_ENUM_AVAIL) == PAPI_OK);
+//    __PAPI_AVAIL_NUM = event_codes.size();
+//    assert(__PAPI_AVAIL_NUM>0);
+//
+//    int i;
+//    int EventSet = PAPI_NULL;
+//    CHECK_PAPI_VALID( PAPI_create_eventset(&EventSet), PAPI_OK );
+//    for(i=0;i<num && i<__PAPI_AVAIL_NUM;++i) {
+//        int retval = PAPI_add_event(EventSet, event_codes[i]);
+//        if(retval!=PAPI_OK) {
+//            break;
+//        }
+//    }
+//    PAPI_PMU_MAX_NUM = i;
+//
+//    if(PAPI_PMU_MAX_NUM==0) {
+//	    printf("papi_init failed: PAPI_PMU_MAX_NUM == 0!\n");
+//	    printf("INFO: ignore PAPI collection!\n");
+//	    return;
+//    }
+//
+//    __PAPI_SLICE_NUM = (__PAPI_AVAIL_NUM+PAPI_PMU_MAX_NUM-1) / PAPI_PMU_MAX_NUM;
+//    __PAPI_SLICE = (double*)malloc(sizeof(double)*__PAPI_SLICE_NUM*PAPI_PMU_MAX_NUM);
+//    __PAPI_EVENT_SETS = (int*)malloc(sizeof(int)*__PAPI_SLICE_NUM);
+//    assert(__PAPI_SLICE != NULL);
+//    assert(__PAPI_EVENT_SETS != NULL);
+//
+//    __PAPI_SLICE[0] = 0.0;
+//    __PAPI_EVENT_SETS[0] = EventSet;
+//
+//    printf("Available number of hardware counters: %d\n", PAPI_PMU_MAX_NUM);
+//    printf("PAPI Avail Event Num = %d\n", __PAPI_AVAIL_NUM);
+//    printf("Number of tests need for collecting all PAPI counter values: %d\n", __PAPI_SLICE_NUM);
+//
+//    for(i=1; i<__PAPI_SLICE_NUM; ++i) {
+//        __PAPI_EVENT_SETS[i] = PAPI_NULL;
+//        CHECK_PAPI_VALID( PAPI_create_eventset(__PAPI_EVENT_SETS+i), PAPI_OK );
+//        for(int k=0; k<PAPI_PMU_MAX_NUM; ++k) {
+//            uint32_t idx = i*PAPI_PMU_MAX_NUM+k;
+//            if(idx < event_codes.size()) {
+//                CHECK_PAPI_VALID( PAPI_add_event(__PAPI_EVENT_SETS[i], event_codes[idx]), PAPI_OK );
+//            }
+//            __PAPI_SLICE[idx] = 0.0;
+//        }
+//    }
+//    papi_initialized = true;
+//}
+//
+//void papi_fini() {
+//    if(papi_initialized) {
+//      for(int i=0; i<__PAPI_SLICE_NUM; ++i) {
+//        PAPI_destroy_eventset(__PAPI_EVENT_SETS+i);
+//      }
+//      __PAPI_SLICE_NUM = 0;
+//      __PAPI_AVAIL_NUM = 0;
+//      SAFE_FREE(__PAPI_SLICE);
+//      SAFE_FREE(__PAPI_EVENT_SETS);
+//    }
+//}
+//
+//void test_begin(int i) {
+//    CHECK_PAPI_VALID(PAPI_start( __PAPI_EVENT_SETS[i] ), PAPI_OK);
+//}
+//
+//void test_end(int i, int scale) {
+//    long long int value[MAX_PMU_NUM] = {0};
+//    CHECK_PAPI_VALID(PAPI_stop( __PAPI_EVENT_SETS[i], value ), PAPI_OK);
+//    double* cur_papi_slice = __PAPI_SLICE + i*PAPI_PMU_MAX_NUM;
+//    for(int k=0; k<PAPI_PMU_MAX_NUM; ++k) {
+//        cur_papi_slice[k] = (double)value[k] / (double)scale;
+//    }
+//}
 
 // output metrics to <name>.dat
 void test_output(const char* name) {

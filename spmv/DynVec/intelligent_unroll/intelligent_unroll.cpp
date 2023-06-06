@@ -166,7 +166,7 @@ class IntelligentUnroll{
         LLVMCodeGen codegen = LLVMCodeGen( vector_ );
         codegen.AddFunction( func_state_ptr_ );
 
-//        codegen.PrintModule();
+        codegen.PrintModule();
 //        LOG(INFO) << "add function finished";
         llvm_module_ptr_ = new LLVMModule( codegen.get_mod(),codegen.get_ctx() );
         #ifdef __AVX512CD__
@@ -175,6 +175,7 @@ class IntelligentUnroll{
             #ifdef __AVX2__
             std::string arch_str = "llvm -mcpu=x86-64  -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx,+fast-gather";
             #else
+            #error  "Unsupported architetures"
             LOG(FATAL) << "Unsupported architetures";
 
             #endif

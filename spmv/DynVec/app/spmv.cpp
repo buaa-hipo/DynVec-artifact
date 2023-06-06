@@ -143,6 +143,7 @@ int main( int argc , char const * argv[] ) {
             row_ptr_all[j] = row_i;
         }
     }
+
     std::string spmv_str = 
     "input: int * row_ptr,   \
             int * column_ptr,\
@@ -153,6 +154,15 @@ int main( int argc , char const * argv[] ) {
             y_array[ row_ptr[i] ] += data_ptr[i] \
             * x_array[column_ptr[i]]\
             ";
+    //spmv_str = 
+    //"input: int * row_ptr,   \
+    //        int * column_ptr,\
+    //        double * x_array,\
+    //        double * data_ptr\
+    // output:double * y_array \
+    // lambda i : \
+    //        y_array[ i ] += data_ptr[i] \
+    //        ";
     std::map<std::string,void*> name2ptr_map;
     name2ptr_map[ "row_ptr" ] = row_ptr_all;
 
@@ -180,7 +190,7 @@ int main( int argc , char const * argv[] ) {
     // Timer::printTimer("aot");
 
     if(with_papi) {
-       papi_init();
+       //papi_init();
     } else {
        printf("PAPI profiling is disabled.\n");
     }
@@ -192,14 +202,14 @@ int main( int argc , char const * argv[] ) {
     base_name = remove_extension(path.back());
     std::string aot_name = base_name + std::string(".aot");
     spmv_local( y_array_bak, x_array,data_ptr,column_ptr,row_ptr,row_num );
-    PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
+    //PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
 
     std::string jit_name = base_name + std::string(".jit");
     spmv_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num);
-    PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
+    //PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
 
     if(with_papi) {
-        papi_fini();
+        //papi_fini();
     }
 
     

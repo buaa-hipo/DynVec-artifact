@@ -8,7 +8,7 @@ Module* TheModule;
 static std::map<std::string, AllocaInst *> NamedValues;
 int main() {
 
-    std::unique_ptr<LLVMModule> llvm_module = llvm::make_unique<LLVMModule>( );
+    std::unique_ptr<LLVMModule> llvm_module = std::make_unique<LLVMModule>( );
 
     llvm_module->Init("llvm -mcpu=x86-64  -mattr=avx2");
     TheContext = llvm_module->get_ctx();

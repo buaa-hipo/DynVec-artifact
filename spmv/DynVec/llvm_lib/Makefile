@@ -1,11 +1,11 @@
-CC=clang++
+#CC=clang++
 #CFLAGS=-O3 -ffast-math `llvm-config --cflags` -g 
-#CC=g++
+CC=g++
 #CFLAGS=-g -ffast-math `llvm-config --cflags`
 #LD=clang++ 
 CFLAGS=-O3 -ffast-math `llvm-config --cxxflags --ldflags --libs core executionengine mcjit interpreter analysis native bitwriter --system-libs` -g
-#LD=g++
-LD=clang++
+LD=g++
+#LD=clang++
 LDFLAGS= -ffast-math  `llvm-config --cxxflags --ldflags --libs core executionengine mcjit interpreter analysis native bitwriter --system-libs`  -rdynamic -g
 
 #-lLLVMDebugTool 

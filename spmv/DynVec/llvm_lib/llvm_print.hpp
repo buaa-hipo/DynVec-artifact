@@ -2,7 +2,7 @@
 #define LLVM_PRINT_HPP
 #include "llvm_lib/llvm_common.h"
 class LLVMPrint {
-    llvm::Function * func_print_;
+    llvm::Function*  func_print_;
     llvm::IRBuilder<> * builder_ptr_;
     llvm::Type * t_int_;
     llvm::Type * t_double_;
@@ -18,9 +18,10 @@ class LLVMPrint {
 
         llvm::FunctionType * func_type =  llvm::FunctionType::get( t_int_, arg_type_print, true);
 
-        llvm::Constant * func_const = TheModule->getOrInsertFunction("printf", func_type );// AttributeSet().addAttribute( *TheContext, 1U, Attribute::NoAlias ));
-        llvm::Function * func_print = reinterpret_cast<llvm::Function*>( func_const );
-        func_print_ = func_print;
+        //llvm::Constant * func_const = TheModule->getOrInsertFunction("printf", func_type );// AttributeSet().addAttribute( *TheContext, 1U, Attribute::NoAlias ));
+        llvm::FunctionCallee func_const = TheModule->getOrInsertFunction("printf", func_type );// AttributeSet().addAttribute( *TheContext, 1U, Attribute::NoAlias ));
+        //llvm::Function * func_print = reinterpret_cast<llvm::Function*>( func_const );
+        func_print_ = reinterpret_cast<llvm::Function*>(func_const.getCallee());
     }
     void __PrintElem( llvm::Value * value, const std::string &form ) {
     
@@ -48,7 +49,7 @@ class LLVMPrint {
         __PrintElem( value , "Print %ld\n");
     }
 
-    void PrintPtr( llvm::Value * value_ptr, const int lanes ) {
+    void PrintPtr(llvm::LLVMContext * TheContext, llvm::Value * value_ptr, const int lanes ) {
         std::vector<llvm::Value*> values;
         std::string str_format = std::string(" data ");
         for( int i = 0 ; i < lanes ; i++ ) { 
@@ -60,8 +61,8 @@ class LLVMPrint {
         values.push_back(formatStr);
         for( int i = 0 ; i < lanes ; i++ ) {
             llvm::Constant * index = llvm::ConstantInt::get( t_int_, i);  
-            llvm::Value * ptr = builder_ptr_->CreateInBoundsGEP( value_ptr, index);
-            llvm::Value * data = builder_ptr_->CreateLoad( ptr );
+            llvm::Value * ptr = builder_ptr_->CreateInBoundsGEP(llvm::Type::getInt32PtrTy(*TheContext), value_ptr, index);
+            llvm::Value * data = builder_ptr_->CreateLoad( llvm::Type::getInt32PtrTy(*TheContext),ptr );
             values.push_back( data ); 
         }
         builder_ptr_->CreateCall( func_print_, values );
@@ -85,7 +86,7 @@ class LLVMPrint {
 #define LLVMPrintDOUBLE(mod,ctx,build,data)  LLVMPrint( mod,ctx,build).PrintDouble(data)
 
 #define LLVMPrintFloat(mod,ctx,build,data)  LLVMPrint( mod,ctx,build).PrintFloat(data)
-#define LLVMPrintPtr(mod,ctx,build,ptr,lanes)  LLVMPrint( mod,ctx,build).PrintPtr(ptr,lanes)
+#define LLVMPrintPtr(mod,ctx,build,ptr,lanes)  LLVMPrint( mod,ctx,build).PrintPtr(ctx, ptr,lanes)
 
 
 #endif

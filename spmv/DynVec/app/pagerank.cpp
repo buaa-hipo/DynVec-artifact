@@ -181,7 +181,7 @@ int main( int argc , char const * argv[] ) {
     // Timer::printTimer("aot");
 
     if(with_papi) {
-       papi_init();
+       //papi_init();
     } else {
        printf("PAPI profiling is disabled.\n");
     }
@@ -192,14 +192,14 @@ int main( int argc , char const * argv[] ) {
     base_name = remove_extension(path.back());
     std::string aot_name = base_name + std::string(".aot");
     pagerank(sum_bak, n1, n2, rank, nneibor, nedges);
-    PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), pagerank(sum_time, n1, n2, rank, nneibor, nedges) );
+    //PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), pagerank(sum_time, n1, n2, rank, nneibor, nedges) );
 
     std::string jit_name = base_name + std::string(".jit");
     pagerank_dynvec((FuncType)func_int64, sum, n1, n2, rank, nneibor, nedges);
-    PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), pagerank_dynvec((FuncType)func_int64, sum_time, n1, n2, rank, nneibor, nedges) );
+    //PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), pagerank_dynvec((FuncType)func_int64, sum_time, n1, n2, rank, nneibor, nedges) );
 
     if(with_papi) {
-       papi_fini();
+       //papi_fini();
     }
     
 //     func( sum, n1,n2,rank,nneibor );

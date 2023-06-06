@@ -7,6 +7,72 @@
                            sizeof(bool),sizeof(int8_t),sizeof(void*),sizeof(int64_t)};
         return type_size[data_type];
     }
+    llvm::Type * LLVMCodeGen::Type2LLVMTypeRemovePointer(const Type & type) {
+        if( type == __int_v ) { 
+            return llvm::VectorType::get( t_int_,vector_ ); 
+        } else if( type == __double_v ){
+            return llvm::VectorType::get( t_double_, vector_ );
+        } else if( type == __int ) {
+            return t_int_;
+        } else if( type == __double ) {
+            return t_double_;
+        } else if(type == __void){
+            return t_void_; 
+        } else if(type == __double_ptr ) {
+            return t_double_;
+        } else if(type == __int_ptr) {
+            return t_int_;
+        } else if(type == __int_ptr_ptr) {
+            return t_int_->getPointerTo();
+        } else if( type == __double_ptr_ptr ){
+            return t_double_p_->getPointerTo();
+        } else if(type == __bool_v) {
+            return t_bool_vec_;
+        } else if(type == __double_v_ptr){
+            return t_double_vec_p_;
+        } else if( type == __int_v_ptr) {
+            return t_int_vec_p_; 
+        } else if(type == __double_ptr_v) {
+            return t_double_ptr_vec_;
+        } else if( type == __float_v ){ 
+            return t_float_vec_;
+        } else if( type == __float ) {
+            return t_float_;
+        } else if( type == __float_v_ptr ) {
+            return t_float_vec_ptr_;
+        } else if( type == __float_ptr ) {
+            return t_float_ptr_;
+        } else if( type == __float_ptr_v ) {
+            return t_float_ptr_vec_;
+        } else if( type == __dynvec_int8 ) { 
+            return t_int8_;
+        } else if( type == __dynvec_int8_ptr ) {
+            return t_int8_ptr_;
+        } else if(type == __dynvec_int8_v) {
+            return t_int8_vec_;
+        } else if( type == __dynvec_int8_v_ptr ) { 
+            return t_int8_vec_ptr_;
+        } else if( type == __dynvec_int64 ) { 
+            return t_int64_;
+        } else if( type == __dynvec_int64_ptr ) {
+            return t_int64_p_;
+        } else if( type == __dynvec_int64_ptr_ptr ) {
+            return t_int64_p_p_;
+        } else if(type == __dynvec_int64_v) {
+            return t_int64_vec_;
+        } else if( type == __dynvec_int64_v_ptr ) { 
+            return t_int64_vec_p_;
+        } else if( type == __int_dv_ptr ) {
+            return t_int_dvec_p_;
+        } else if( type == __int_dv ) {
+            return t_int_dvec_;
+        } else if( type == __int4 ){
+            return t_int4_;
+        } else {
+            LOG(FATAL) << type <<"type does not support ";
+            return t_int_;
+        }
+    }
     llvm::Type * LLVMCodeGen::Type2LLVMType(const Type & type) {
         if( type == __int_v ) { 
             return llvm::VectorType::get( t_int_,vector_ ); 
@@ -74,12 +140,13 @@
         }
     }
 
-LLVMCodeGen::LLVMCodeGen(const int vector):vector_(vector) {
+LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
+        vector_ = llvm::ElementCount::get(vector, false);
 
-        ctx_ptr_ = llvm::make_unique<llvm::LLVMContext>();
-        mod_ptr_= llvm::make_unique<llvm::Module>("module",*ctx_ptr_);
+        ctx_ptr_ = std::make_unique<llvm::LLVMContext>();
+        mod_ptr_= std::make_unique<llvm::Module>("module",*ctx_ptr_);
 
-        conflict_512_ = llvm::Intrinsic::getDeclaration( mod_ptr_.get(), llvm::Intrinsic::x86_avx512_mask_conflict_d_512);
+        conflict_512_ = llvm::Intrinsic::getDeclaration( mod_ptr_.get(), llvm::Intrinsic::x86_avx512_conflict_d_512);
 
         permvar_int_512_ = llvm::Intrinsic::getDeclaration( mod_ptr_.get() , llvm::Intrinsic::x86_avx512_permvar_si_512);
 
@@ -91,14 +158,14 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector_(vector) {
 //        permvar_double_256_ = llvm::Intrinsic::getDeclaration( mod_ptr_.get(), llvm::Intrinsic::x86_avx512_permvar_df_256 );
 
 //        x86_avx512_permvar_df_256
-	TheFPM = llvm::make_unique<llvm::legacy::FunctionPassManager>( mod_ptr_.get());
+	TheFPM = std::make_unique<llvm::legacy::FunctionPassManager>( mod_ptr_.get());
 	TheFPM->add( llvm::createPromoteMemoryToRegisterPass());
 	TheFPM->add( llvm::createInstructionCombiningPass() );
 	TheFPM->add( llvm::createReassociatePass());
 	TheFPM->add( llvm::createGVNPass());
 	TheFPM->add(llvm::createCFGSimplificationPass());
 	TheFPM->doInitialization();
-        build_ptr_ = llvm::make_unique<llvm::IRBuilder<>>(*ctx_ptr_);
+        build_ptr_ = std::make_unique<llvm::IRBuilder<>>(*ctx_ptr_);
         t_void_ = llvm::Type::getVoidTy(*ctx_ptr_);
 
         t_int_ =  llvm::Type::getInt32Ty(*ctx_ptr_);
@@ -150,7 +217,7 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector_(vector) {
     	t_int_ptr_vec_ = llvm::VectorType::get(t_int_p_,vector_);
     	t_double_ptr_vec_ = llvm::VectorType::get(t_double_p_,vector_);
 
-        
+
         Zero_ = llvm::ConstantInt::get( t_int_ , 0);
 
         SixTeen_ = llvm::ConstantInt::get( t_int_ , 16);
@@ -203,22 +270,22 @@ llvm::Value * LLVMCodeGen::CodeGen_(Print * stat) {
         } else if( type == __double ) {
             LLVMPrintDOUBLE( mod_ptr_.get(), ctx_ptr_.get(), build_ptr_.get(), value);
         } else if( type == __double_v ) {
-            for( int i = 0 ; i < vector_; i++ ) {
+            for( int i = 0 ; i < vector__; i++ ) {
                 llvm::Value * value_tmp = build_ptr_->CreateExtractElement( value, i);
                 LLVMPrintDOUBLE( mod_ptr_.get(), ctx_ptr_.get(), build_ptr_.get(), value_tmp);
             }
         } else if( type == __float_v ) {
-            for( int i = 0 ; i < vector_; i++ ) {
+            for( int i = 0 ; i < vector__; i++ ) {
                 llvm::Value * value_tmp = build_ptr_->CreateExtractElement( value, i);
                 LLVMPrintFloat( mod_ptr_.get(), ctx_ptr_.get(), build_ptr_.get(), value_tmp);
             }
         } else if( type == __int_v ) {
-            for( int i = 0 ; i < vector_; i++ ) {
+            for( int i = 0 ; i < vector__; i++ ) {
                 llvm::Value * value_tmp = build_ptr_->CreateExtractElement( value, i);
                 LLVMPrintInt( mod_ptr_.get(), ctx_ptr_.get(), build_ptr_.get(), value_tmp);
             }
         } else if( type == __dynvec_int8_v ) {
-            for( int i = 0 ; i < vector_; i++ ) {
+            for( int i = 0 ; i < vector__; i++ ) {
                 llvm::Value * value_tmp_int8 = build_ptr_->CreateExtractElement( value, i);
                 llvm::Value * value_tmp_int = build_ptr_->CreateZExtOrBitCast( value_tmp_int8 , t_int_ );
                 LLVMPrintInt( mod_ptr_.get(), ctx_ptr_.get(), build_ptr_.get(), value_tmp_int);
@@ -286,7 +353,7 @@ llvm::Value * LLVMCodeGen::CodeGen_( For * stat ) {
         } else {
             step_val = One_;
         }
-        llvm::Value * cur_var = build_ptr_->CreateLoad( Alloca, var_name );
+        llvm::Value * cur_var = build_ptr_->CreateLoad(t_int_, Alloca, var_name );
 
         llvm::Value * NextVar = build_ptr_->CreateAdd( cur_var, step_val,"nextvar");
 
@@ -388,7 +455,8 @@ llvm::Value * LLVMCodeGen::CodeGen_( IncAddr * stat ) {
 
 //        return build_ptr_->CreateInBoundsGEP( addr_value, inc_value);
 
-        llvm::Value * ret = build_ptr_->CreateInBoundsGEP( addr_value, inc_value );
+        //llvm::Value * ret = build_ptr_->CreateInBoundsGEP(addr_value->getType(), addr_value, inc_value );
+        llvm::Value * ret = build_ptr_->CreateInBoundsGEP(Type2LLVMTypeRemovePointer(stat->get_addr()->get_type()), addr_value, inc_value );
         return ret;
     }
 llvm::Value * LLVMCodeGen::CodeGen_(Varience * stat) {
@@ -405,7 +473,7 @@ llvm::Value * LLVMCodeGen::CodeGen_(Varience * stat) {
             }
         } else {
             if( var_mutable_set_.find(stat) != var_mutable_set_.end() )
-                ret_var = build_ptr_->CreateLoad( var_val_map_find->second, stat->get_name() );
+                ret_var = build_ptr_->CreateLoad(Type2LLVMType(stat->get_type()), var_val_map_find->second, stat->get_name() );
             else 
                 ret_var = var_val_map_find->second;
         }
@@ -426,8 +494,9 @@ llvm::Value * LLVMCodeGen::CodeGen_(Scatter * stat) {
         } else { 
             mask_value = CodeGen( mask_state );
         }
-        llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP( addr_value, index_value);
-        build_ptr_->CreateMaskedScatter(data_value,ptr_value,alinements_,mask_value);
+        //llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(addr_value->getType(), addr_value, index_value);
+        llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(Type2LLVMTypeRemovePointer(stat->get_addr()->get_type()), addr_value, index_value);
+        build_ptr_->CreateMaskedScatter(data_value,ptr_value,llvm::Align(alinements_),mask_value);
         return Null_;
     }
 llvm::Value * LLVMCodeGen::CodeGen_(Gather * stat) {
@@ -436,7 +505,8 @@ llvm::Value * LLVMCodeGen::CodeGen_(Gather * stat) {
 
     llvm::Value * index_value = CodeGen( stat->get_index());
 
-    llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP( addr_value, index_value);
+    //llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(addr_value->getType(), addr_value, index_value);
+    llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(Type2LLVMTypeRemovePointer(stat->get_addr()->get_type()), addr_value, index_value);
     StateMent * mask_stat = stat->get_mask();
     llvm::Value * mask_value ;
     if( mask_stat ) {
@@ -445,12 +515,12 @@ llvm::Value * LLVMCodeGen::CodeGen_(Gather * stat) {
         mask_value = CodeGen( stat->get_mask() );
     }
         if( stat->get_type() == __double_v ) {         
-            return  build_ptr_->CreateMaskedGather(  ptr_value , alinements_, mask_value , DZeroVec_);
+            return  build_ptr_->CreateMaskedGather(  t_double_vec_, ptr_value , llvm::Align(alinements_), mask_value , DZeroVec_);
         } else if( stat->get_type() == __float_v ) {
         
-            return  build_ptr_->CreateMaskedGather(  ptr_value , alinements_, mask_value , FZeroVec_);
+            return  build_ptr_->CreateMaskedGather(  t_float_vec_, ptr_value , llvm::Align(alinements_), mask_value , FZeroVec_);
         } else if( stat->get_type() == __int_v ) { 
-            return  build_ptr_->CreateMaskedGather(  ptr_value , alinements_, mask_value , ZeroVec_);
+            return  build_ptr_->CreateMaskedGather(  t_int_vec_, ptr_value , llvm::Align(alinements_), mask_value , ZeroVec_);
         } else {
             LOG(FATAL ) << "Unsupported type" << stat->get_type();
             return Null_; 
@@ -467,20 +537,20 @@ llvm::Value * LLVMCodeGen::CodeGen_(Load * stat) {
 
         llvm::Value * mask_value = CodeGen( stat->get_mask());
         if( !mask_value->getType()->isVectorTy()) {
-            if(vector_ == VECTOR8) {
+            if(vector__ == VECTOR8) {
                 
                 if( mask_value->getType()->getIntegerBitWidth() != VECTOR8) 
                     mask_value = build_ptr_->CreateIntCast( mask_value, t_int8_, false );
         
                 mask_value = build_ptr_->CreateBitCast( mask_value, t_bool_vec_ ); 
 
-            } else if( vector_ == VECTOR16 ){
+            } else if( vector__ == VECTOR16 ){
                  if( mask_value->getType()->getIntegerBitWidth() != VECTOR16) 
                     mask_value = build_ptr_->CreateIntCast( mask_value, t_int16_, false );
         
                 mask_value = build_ptr_->CreateBitCast( mask_value, t_bool_vec_ ); 
                
-            } else if(vector_ == VECTOR4){ 
+            } else if(vector__ == VECTOR4){ 
                  if( mask_value->getType()->getIntegerBitWidth() != VECTOR4) 
                     mask_value = build_ptr_->CreateIntCast( mask_value, t_int4_, false );
         
@@ -492,17 +562,17 @@ llvm::Value * LLVMCodeGen::CodeGen_(Load * stat) {
         }
 
         if( stat->get_is_aligned() ) {
-            res = build_ptr_->CreateMaskedLoad( addr_value, alinements_, mask_value );
+            res = build_ptr_->CreateMaskedLoad( Type2LLVMType(*stat->get_addr()->get_type().get_pointer2type()), addr_value, llvm::Align(alinements_), mask_value );
         } else {
 
-            res = build_ptr_->CreateMaskedLoad( addr_value, basic_type_size, mask_value );
+            res = build_ptr_->CreateMaskedLoad( Type2LLVMType(*stat->get_addr()->get_type().get_pointer2type()), addr_value, llvm::Align(basic_type_size), mask_value );
         }
     } else {
         if( stat->get_is_aligned() ) {
-            res = build_ptr_->CreateAlignedLoad(  addr_value, alinements_, false);
+            res = build_ptr_->CreateAlignedLoad(  Type2LLVMType(*stat->get_addr()->get_type().get_pointer2type()), addr_value, llvm::Align(alinements_), false);
         } else {
         
-            res = build_ptr_->CreateAlignedLoad(  addr_value, basic_type_size, false);
+            res = build_ptr_->CreateAlignedLoad(  Type2LLVMType(*stat->get_addr()->get_type().get_pointer2type()), addr_value, llvm::Align(basic_type_size), false);
             //res = build_ptr_->CreateLoad( addr_value);
         }
 
@@ -521,20 +591,20 @@ llvm::Value * LLVMCodeGen::CodeGen_(Store * stat) {
 
         llvm::Value * mask_value = CodeGen( stat->get_mask() );
         if( !mask_value->getType()->isVectorTy()) {
-            if( vector_ == VECTOR8) {
+            if( vector__ == VECTOR8) {
                 
                 if( mask_value->getType()->getIntegerBitWidth() != VECTOR8) 
                     mask_value = build_ptr_->CreateIntCast( mask_value, t_int8_, (bool)0 );
         
                 mask_value = build_ptr_->CreateBitCast( mask_value, t_bool_vec_ ); 
 
-            } else if(vector_ == VECTOR16) { 
+            } else if(vector__ == VECTOR16) { 
                 if( mask_value->getType()->getIntegerBitWidth() != VECTOR16) 
                     mask_value = build_ptr_->CreateIntCast( mask_value, t_int16_, (bool)0 );
         
                 mask_value = build_ptr_->CreateBitCast( mask_value, t_bool_vec_ ); 
 
-            } else if(vector_ == VECTOR4){
+            } else if(vector__ == VECTOR4){
                 if( mask_value->getType()->getIntegerBitWidth() != VECTOR16) 
                     mask_value = build_ptr_->CreateIntCast( mask_value, t_int4_, (bool)0 );
         
@@ -546,17 +616,17 @@ llvm::Value * LLVMCodeGen::CodeGen_(Store * stat) {
         }
 
         if( stat->get_is_aligned() ) {
-            res = build_ptr_->CreateMaskedStore( data_value,addr_value, alinements_, mask_value );
+            res = build_ptr_->CreateMaskedStore( data_value,addr_value, llvm::Align(alinements_), mask_value );
         } else {
 
-            res = build_ptr_->CreateMaskedStore( data_value,addr_value, basic_type_size, mask_value );
+            res = build_ptr_->CreateMaskedStore( data_value,addr_value, llvm::Align(basic_type_size), mask_value );
         }
     } else {
         if( stat->get_is_aligned() ) {
-            res = build_ptr_->CreateAlignedStore( data_value, addr_value, alinements_, false);
+            res = build_ptr_->CreateAlignedStore( data_value, addr_value, llvm::Align(alinements_), false);
         } else {
         
-            res = build_ptr_->CreateAlignedStore( data_value, addr_value, basic_type_size, false);
+            res = build_ptr_->CreateAlignedStore( data_value, addr_value, llvm::Align(basic_type_size), false);
             //res = build_ptr_->CreateStore( data_value, addr_value, false);
         }
 
@@ -655,7 +725,7 @@ llvm::Value * LLVMCodeGen::CodeGen_(Reduce * stat) {
         }
     }
     llvm::Value * LLVMCodeGen::LLVMBroadCast( llvm::Value * value, const int lanes) {
-         llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), lanes) );
+         llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), lanes, false) );
         value = build_ptr_->CreateInsertElement(undef, value, Zero_);
         return build_ptr_->CreateShuffleVector(value, undef, ZeroVec_);
    
@@ -868,9 +938,9 @@ llvm::Value * LLVMCodeGen::CodeGen_( DetectConflict * stat) {
      std::vector<llvm::Value *> values;
 
      values.push_back( index_value );
-     values.push_back( ZeroVec_ );
+     //values.push_back( ZeroVec_ );
 
-     values.push_back( FFFF_ );
+     //values.push_back( FFFF_ );
      llvm::Value * conf512 = build_ptr_->CreateCall( conflict_512_, values);
      
      llvm::Value * ret = build_ptr_->CreateICmpEQ( conf512, ZeroVec_);

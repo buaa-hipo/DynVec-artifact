@@ -1,6 +1,7 @@
 #include <atomic>
 #include <mutex>
 #include "llvm_common.h"
+#include <llvm/TargetParser/Host.h>
 #include <sstream>
 
 struct LLVMEnv {
