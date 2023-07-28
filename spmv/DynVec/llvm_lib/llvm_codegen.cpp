@@ -39,9 +39,9 @@
         } else if( type == __float ) {
             return t_float_;
         } else if( type == __float_v_ptr ) {
-            return t_float_vec_ptr_;
+            return t_float_vec_;
         } else if( type == __float_ptr ) {
-            return t_float_ptr_;
+            return t_float_;
         } else if( type == __float_ptr_v ) {
             return t_float_ptr_vec_;
         } else if( type == __dynvec_int8 ) { 
@@ -180,6 +180,7 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
         t_float_ =  llvm::Type::getFloatTy(*ctx_ptr_);
 
         t_float_ptr_ = t_float_->getPointerTo(); 
+        t_double_ptr_ = t_double_->getPointerTo(); 
 
         t_float_vec_ = llvm::VectorType::get( t_float_, vector_ );
 
@@ -495,7 +496,11 @@ llvm::Value * LLVMCodeGen::CodeGen_(Scatter * stat) {
             mask_value = CodeGen( mask_state );
         }
         //llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(addr_value->getType(), addr_value, index_value);
-        llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(Type2LLVMTypeRemovePointer(stat->get_addr()->get_type()), addr_value, index_value);
+        auto type = Type2LLVMTypeRemovePointer(stat->get_addr()->get_type());
+        if (type->isVectorTy()) {
+            type = static_cast<llvm::VectorType*>(type)->getElementType();
+        }
+        llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(type, addr_value, index_value);
         build_ptr_->CreateMaskedScatter(data_value,ptr_value,llvm::Align(alinements_),mask_value);
         return Null_;
     }
@@ -506,7 +511,11 @@ llvm::Value * LLVMCodeGen::CodeGen_(Gather * stat) {
     llvm::Value * index_value = CodeGen( stat->get_index());
 
     //llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(addr_value->getType(), addr_value, index_value);
-    llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(Type2LLVMTypeRemovePointer(stat->get_addr()->get_type()), addr_value, index_value);
+    auto type = Type2LLVMTypeRemovePointer(stat->get_addr()->get_type());
+    if (type->isVectorTy()) {
+        type = static_cast<llvm::VectorType*>(type)->getElementType();
+    }
+    llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(type, addr_value, index_value);
     StateMent * mask_stat = stat->get_mask();
     llvm::Value * mask_value ;
     if( mask_stat ) {
@@ -702,9 +711,9 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
 llvm::Value * LLVMCodeGen::CodeGen_(Reduce * stat) {
         StateMent * v1 = stat->get_v1();
         llvm::Value * v1_value = CodeGen( v1);
-
         if(v1->get_type().get_data_type() == DOUBLE) {
-            llvm::Value * Acc = llvm::UndefValue::get( t_double_ );
+            // llvm::Value * Acc = llvm::UndefValue::get( t_double_ );
+            llvm::Value * Acc = llvm::ConstantFP::get(t_double_, 0.);
             llvm::FastMathFlags FMFFast;
             FMFFast.setFast();
             llvm::CallInst* ret = build_ptr_->CreateFAddReduce(Acc,v1_value);
@@ -713,7 +722,8 @@ llvm::Value * LLVMCodeGen::CodeGen_(Reduce * stat) {
         } else if(v1->get_type().get_data_type() == INT) {
             return build_ptr_->CreateAddReduce(v1_value);
         } else if(v1->get_type().get_data_type() == FLOAT) {
-            llvm::Value * Acc = llvm::UndefValue::get( t_float_ );
+            //llvm::Value * Acc = llvm::UndefValue::get( t_float_ );
+            llvm::Value * Acc = llvm::ConstantFP::get(t_float_, 0.);
             llvm::FastMathFlags FMFFast;
             FMFFast.setFast();
             llvm::CallInst* ret = build_ptr_->CreateFAddReduce(Acc,v1_value);

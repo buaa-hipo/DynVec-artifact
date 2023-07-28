@@ -71,6 +71,7 @@ class LLVMCodeGen {
     llvm::Type*  t_double_p_;
 
     llvm::Type*  t_float_ptr_;
+    llvm::Type*  t_double_ptr_;
 
     llvm::Type* t_bool_vec_;
     llvm::Type* t_int_vec_;
