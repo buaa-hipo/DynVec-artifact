@@ -749,8 +749,13 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
 /////////////////////////
 
     } else {
-        //res = build_ptr_->CreateShuffleVector( v1_value, v2_value, index_value);
+        #if defined __AVX2__ || defined __AVX512CD__
+        res = build_ptr_->CreateShuffleVector( v1_value, v2_value, index_value);
+        #elif defined __SVE__ || defined __SVE512__
         res = build_ptr_->CreateCall(permvar_double_512_, {v1_value,  index_value});
+        #else
+        #error "Unsupported architetures";
+        #endif
     }
     return res;
 }
