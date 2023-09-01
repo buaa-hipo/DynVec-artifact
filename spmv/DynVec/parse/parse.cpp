@@ -509,8 +509,16 @@ int parse_expression(
             const int vector_bits = 512;
 
             return vector_bits / max_bits_;
+        #elif defined __SVE512__
+            const int vector_bits = 512;
+
+            return vector_bits / max_bits_;
         #else 
             #ifdef __AVX2__
+            const int vector_bits = 256;
+
+            return vector_bits / max_bits_;
+            #elif defined __SVE__
             const int vector_bits = 256;
 
             return vector_bits / max_bits_;
@@ -518,6 +526,8 @@ int parse_expression(
             #error  "Unsupported architetures"
             LOG(FATAL) << "Unsupported architetures";
             #endif
+
+            return vector_bits / max_bits_;
         #endif
 }
 

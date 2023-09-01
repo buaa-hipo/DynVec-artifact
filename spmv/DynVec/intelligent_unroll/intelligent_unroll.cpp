@@ -67,7 +67,7 @@ class IntelligentUnroll{
                           output_name_
                           );
         Type::init_type( vector_ );
-//        LOG(INFO) << "parse expression finished";
+        LOG(INFO) << "parse expression finished";
         ///////////generate information
         generate_information( 
                 scatter_set_,
@@ -82,7 +82,7 @@ class IntelligentUnroll{
                 same_feature_range_map_ ,
                 vector_);
 
-//        LOG(INFO) << "generate information finished";
+        LOG(INFO) << "generate information finished";
         ///////////transform data
         transform_data( name_type_map_,
                         name2ptr_map,
@@ -103,7 +103,7 @@ class IntelligentUnroll{
                         vector_
         ); 
 
-        //LOG(INFO) << "transform data finished";
+        LOG(INFO) << "transform data finished";
         ////////////////node tree to code seed
         node_tree2state(
                 output_name_,
@@ -127,7 +127,7 @@ class IntelligentUnroll{
                 root_node_ptr_,
                 vector_
                 );
-        //LOG(INFO) << root_node_ptr_;
+        LOG(INFO) << root_node_ptr_;
 //        LOG(INFO) << "node tree 2 statement finished";
         ///////////// formulation and optimization
         calculate_state_ = formulation_state(
@@ -135,7 +135,7 @@ class IntelligentUnroll{
                 name_varP_varPV_map_,
                 calculate_state_ );
 
-//        LOG(INFO) << "formulation statement finished";
+        LOG(INFO) << "formulation statement finished";
         calculate_state_ = optimization_state(
                 gather_map_,
                 scatter_map_,
@@ -154,32 +154,44 @@ class IntelligentUnroll{
                 vector_
         );
 
-//        LOG(INFO) << "optimize statement finished";
+        LOG(INFO) << "optimize statement finished";
         /////////////combin statement with func_statement
         StateMent * init_func = CombinStatVec(func_init_state_vec_);
         StateMent * func_state = Block::make( init_func,calculate_state_ );
-//        LOG(INFO) << func_state;
+        //LOG(INFO) << func_state;
         func_state_ptr_->set_state( func_state );
          
-//        LOG(INFO) << "merge state finished";
+        LOG(INFO) << "merge state finished";
         /////////// 
         LLVMCodeGen codegen = LLVMCodeGen( vector_ );
+        LOG(INFO) << "codegen init";
         codegen.AddFunction( func_state_ptr_ );
 
         codegen.PrintModule();
-//        LOG(INFO) << "add function finished";
+        LOG(INFO) << "add function finished";
         llvm_module_ptr_ = new LLVMModule( codegen.get_mod(),codegen.get_ctx() );
         #ifdef __AVX512CD__
             std::string arch_str = "llvm -mcpu=knl  -mattr=+avx512f,+avx512pf,+avx512er,+avx512cd,+fma,+avx2,+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx";
-        #else
-            #ifdef __AVX2__
+        #elif defined __AVX2__
             std::string arch_str = "llvm -mcpu=x86-64  -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx,+fast-gather";
-            #else
+        #elif defined __SVE512__
+            std::string arch_str = "llvm -target=armv8.1a-pc-linux-elf  -mattr=+sve";
+        #elif defined __SVE__
+            //std::string arch_str = "llvm -mcpu=v8.1a  -mattr=+sve";
+            std::string arch_str = "llvm -target=armv8.1a-pc-linux-elf  -mattr=+sve";
+        #else 
             #error  "Unsupported architetures"
-            LOG(FATAL) << "Unsupported architetures";
-
-            #endif
         #endif
+        //std::string arch_str = "llvm -mcpu=aarch64  -mattr=+sve";
+
+//            #ifdef __AVX2__
+//            std::string arch_str = "llvm -mcpu=x86-64  -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx,+fast-gather";
+//            #else
+//            #error  "Unsupported architetures"
+//            LOG(FATAL) << "Unsupported architetures";
+//
+//            #endif
+//        #endif
 
         llvm_module_ptr_->Init( arch_str );
       

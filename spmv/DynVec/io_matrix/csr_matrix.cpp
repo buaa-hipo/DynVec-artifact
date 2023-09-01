@@ -7,7 +7,22 @@
 #define BUFFER_SIZE 1024
 #include "mmio.h"
 #include "util.h"
-#include "mm_malloc.h"
+#include <memory>
+void* aligned_malloc(size_t size, size_t alignment)
+{
+	size_t offset = alignment - 1 + sizeof(void*);
+	void * originalP = malloc(size + offset);
+	size_t originalLocation = reinterpret_cast<size_t>(originalP);
+	size_t realLocation = (originalLocation + offset) & ~(alignment - 1);
+	void * realP = reinterpret_cast<void*>(realLocation);
+	size_t originalPStorage = realLocation - sizeof(void*);
+	*reinterpret_cast<void**>(originalPStorage) = originalP;
+	return realP;
+}
+#define _mm_malloc(a, b) aligned_malloc(a,b)
+
+//#include "mm_malloc.h"
+
 PageRankStructurePtr pagerank_read(std::string file_name ) {
     PageRankStructurePtr page_rank_structure_ptr = (PageRankStructurePtr)malloc(sizeof(PageRankStructure));
     int nnodes;
@@ -52,13 +67,14 @@ PageRankStructurePtr pagerank_read(std::string file_name ) {
      
     return page_rank_structure_ptr;
 }
-void csr_spmv(const csrSparseMatrixPtr matrix , const double * x , double * y ) {
+template<typename FPTYPE>
+void csr_spmv(const csrSparseMatrixPtr<FPTYPE> matrix , const FPTYPE * x , FPTYPE * y ) {
     //const int column_num = matrix->column_num;
     //const int row_num = matrix->row_num;
     //const int data_num = matrix->data_num;
     const int * row_ptr = matrix->row_ptr;
     const int * column_ptr = matrix->column_ptr;
-    const double * data_ptr = matrix->data_ptr;
+    const FPTYPE * data_ptr = matrix->data_ptr;
     for( int i = 0 ; i < matrix->row_num ; i++ ) {
         const int data_begin = row_ptr[i] ;
         const int data_end = row_ptr[i+1] ;
@@ -69,11 +85,12 @@ void csr_spmv(const csrSparseMatrixPtr matrix , const double * x , double * y ) 
     }
 }
 
-#define VALUE_TYPE double
-csrSparseMatrixPtr matrix_read_csr( const char * filename ) {
-    csrSparseMatrixPtr res;
+//#define VALUE_TYPE double
+template <typename VALUE_TYPE>
+csrSparseMatrixPtr<VALUE_TYPE> matrix_read_csr( const char * filename ) {
+    csrSparseMatrixPtr<VALUE_TYPE> res;
 
-   res = (csrSparseMatrixPtr) malloc( sizeof( csr_sparse_matrix ) );
+   res = (csrSparseMatrixPtr<VALUE_TYPE>) malloc( sizeof( csr_sparse_matrix<VALUE_TYPE> ) );
 
     int m, n, nnzA;
     int *csrRowPtrA;
@@ -243,11 +260,11 @@ csrSparseMatrixPtr matrix_read_csr( const char * filename ) {
 
     // free tmp space
 //    free(addr);
-    free(csrRowPtrA_counter) ;
-    free(csrRowIdxA_tmp);
-    free(csrColIdxA_tmp);
+    //free(csrRowPtrA_counter) ;
+    //free(csrRowIdxA_tmp);
+    //free(csrColIdxA_tmp);
 
-    free(csrValA_tmp);
+    //free(csrValA_tmp);
 
 
 
@@ -283,3 +300,8 @@ csrSparseMatrixPtr matrix_read_csr( const char * filename ) {
 
 
 
+
+template csrSparseMatrixPtr<float> matrix_read_csr<float>( const char * filename );
+template csrSparseMatrixPtr<double> matrix_read_csr<double>( const char * filename );
+//template void csr_spmv<double>(const csrSparseMatrixPtr<double> matrix , const double * x , double * y );
+//template void csr_spmv<float>(const csrSparseMatrixPtr<float> matrix , const float * x , float * y );

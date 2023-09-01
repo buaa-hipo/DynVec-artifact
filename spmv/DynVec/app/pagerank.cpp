@@ -69,8 +69,16 @@ const int max_bits_ = sizeof(float) * ByteSize;
     const int vector_bits = 512;
 
     const int vector_nums = vector_bits / max_bits_;
+#elif defined __SVE512__
+    const int vector_bits = 512;
+
+    const int vector_nums = vector_bits / max_bits_;
 #else 
     #ifdef __AVX2__
+    const int vector_bits = 256;
+
+    const int vector_nums = vector_bits / max_bits_;
+    #elif defined __SVE__
     const int vector_bits = 256;
 
     const int vector_nums = vector_bits / max_bits_;

@@ -1,4 +1,5 @@
 #include "llvm_codegen.hpp"
+#include <llvm/IR/IntrinsicsAArch64.h>
 
     int GetBasicTypeSize( StateMent * v ) {
         const Type & state_type = v->get_type();
@@ -9,9 +10,12 @@
     }
     llvm::Type * LLVMCodeGen::Type2LLVMTypeRemovePointer(const Type & type) {
         if( type == __int_v ) { 
-            return llvm::VectorType::get( t_int_,vector_ ); 
+            return t_int_vec_;
+            //return llvm::VectorType::get( t_int_,vector_ ); 
         } else if( type == __double_v ){
-            return llvm::VectorType::get( t_double_, vector_ );
+            //return llvm::VectorType::get( t_double_, vector_ );
+            //return llvm::VectorType::get( t_double_, 2, true );
+            return t_double_vec_;
         } else if( type == __int ) {
             return t_int_;
         } else if( type == __double ) {
@@ -75,9 +79,12 @@
     }
     llvm::Type * LLVMCodeGen::Type2LLVMType(const Type & type) {
         if( type == __int_v ) { 
-            return llvm::VectorType::get( t_int_,vector_ ); 
+            //return llvm::VectorType::get( t_int_,vector_ ); 
+            return t_int_vec_;
         } else if( type == __double_v ){
-            return llvm::VectorType::get( t_double_, vector_ );
+            //return llvm::VectorType::get( t_double_, vector_ );
+            //return llvm::VectorType::get( t_double_, 2, true );
+            return t_double_vec_;
         } else if( type == __int ) {
             return t_int_;
         } else if( type == __double ) {
@@ -141,7 +148,13 @@
     }
 
 LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
+        #if defined __AVX2__ || defined __AVX512CD__
         vector_ = llvm::ElementCount::get(vector, false);
+        #elif defined __SVE__ || defined __SVE512__
+        vector_ = llvm::ElementCount::get(2, true);
+        #else
+            #error "unknown IA"
+        #endif
 
         ctx_ptr_ = std::make_unique<llvm::LLVMContext>();
         mod_ptr_= std::make_unique<llvm::Module>("module",*ctx_ptr_);
@@ -150,10 +163,10 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
 
         permvar_int_512_ = llvm::Intrinsic::getDeclaration( mod_ptr_.get() , llvm::Intrinsic::x86_avx512_permvar_si_512);
 
-        permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx512_permvar_df_512);
+        //permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx512_permvar_df_512);
         permvar_float_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx512_permvar_sf_512);
 
-        permvar_float_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx2_permps);
+        //permvar_float_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx2_permps);
 //        permvar_double_256_ = llvm::Intrinsic::getDeclaration( mod_ptr_.get(), llvm::Intrinsic::x86_avx_vpermilvar_pd_256 );
 //        permvar_double_256_ = llvm::Intrinsic::getDeclaration( mod_ptr_.get(), llvm::Intrinsic::x86_avx512_permvar_df_256 );
 
@@ -183,8 +196,10 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
         t_double_ptr_ = t_double_->getPointerTo(); 
 
         t_float_vec_ = llvm::VectorType::get( t_float_, vector_ );
+        //t_float_vec_ = llvm::VectorType::get( t_float_, 2, true );
 
         t_float_ptr_vec_ = llvm::VectorType::get( t_float_ptr_, vector_ );
+        //t_float_ptr_vec_ = llvm::VectorType::get( t_float_ptr_, true, 2 );
 
         t_float_vec_ptr_ = t_float_vec_->getPointerTo();
 
@@ -199,11 +214,16 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
         t_int64_p_p_ = t_int64_p_->getPointerTo();
         t_int_dvec_ = llvm::VectorType::get( t_int_, vector_ * 2);
         t_int_vec_ = llvm::VectorType::get( t_int_, vector_);
+        //t_int_vec_ = llvm::VectorType::get( t_int_, 2, true);
         t_int64_vec_ = llvm::VectorType::get( t_int64_, vector_ );
+        //t_int64_vec_ = llvm::VectorType::get( t_int64_, 2, true );
         t_bool_vec_ = llvm::VectorType::get( t_bool_, vector_ );
+        //t_bool_vec_ = llvm::VectorType::get( t_bool_, 2, true );
 
 	    t_int8_vec_ = llvm::VectorType::get( t_int8_, vector_ );
+	    //t_int8_vec_ = llvm::VectorType::get( t_int8_, 2, true );
         t_double_vec_ = llvm::VectorType::get( t_double_, vector_ );
+        //t_double_vec_ = llvm::VectorType::get( t_double_, 2, true );
 
         //t_double_vec4_p_ = t_double_vec4_->getPointerTo();
 //        t_int_vec4_p_ = t_int_vec4_->getPointerTo();
@@ -216,13 +236,16 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
 	    t_double_vec_p_ = t_double_vec_->getPointerTo();
 
     	t_int_ptr_vec_ = llvm::VectorType::get(t_int_p_,vector_);
+    	//t_int_ptr_vec_ = llvm::VectorType::get(t_int_p_,2, true);
     	t_double_ptr_vec_ = llvm::VectorType::get(t_double_p_,vector_);
+    	//t_double_ptr_vec_ = llvm::VectorType::get(t_double_p_,2, true);
 
 
         Zero_ = llvm::ConstantInt::get( t_int_ , 0);
 
         SixTeen_ = llvm::ConstantInt::get( t_int_ , 16);
 
+        //ZeroVec_ = llvm::ConstantVector::getSplat( vector_, Zero_);
         ZeroVec_ = llvm::ConstantVector::getSplat( vector_, Zero_);
 
         SixTeenVec_ = llvm::ConstantVector::getSplat( vector_, SixTeen_);
@@ -242,6 +265,16 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
             //CONST_INDEX_NUM_[i ] = llvm::ConstantInt::get( t_int_ , i );
 //        }
         Null_ = llvm::Constant::getNullValue( t_int_ );
+
+        fprintf(stderr, "before permvar\n");
+        permvar_int_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_int_vec_});
+        permvar_float_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_float_vec_});
+        //permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {});
+        permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_double_vec_});
+        insert_int_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_insr, {t_int64_vec_, t_int64_});
+
+        
+        fprintf(stderr, "after permvar\n");
 }
     llvm::Value* LLVMCodeGen::CodeGen_(StateMent * stat ) {
         LOG(FATAL) << "the statement " << stat->get_class_name() \
@@ -377,6 +410,17 @@ llvm::Value * LLVMCodeGen::CodeGen_( For * stat ) {
                 LOG(FATAL) << "Unsupported Type";
             }
         } else {
+        //if (typeid(T) == typeid(int))
+        //{
+        //    for (int i = lanes-1; i >= 0; --i) {
+        //        std::vector<llvm::Value*> args;
+        //        args.push_back(vec);
+        //        args.push_back(llvm::ConstantInt::get(t_int64_, vec_ptr[i]));
+        //        LOG(INFO) << "at init_vec";
+        //        vec = build_ptr_->CreateCall(insert_int_256_, args);
+        //    }
+        //    return;
+        //}
         for( int i = 0 ; i < lanes; i++ ) {
             llvm::Value * index = llvm::ConstantInt::get(t_int_, i  );
             llvm::Value * data;
@@ -687,6 +731,7 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
             std::vector<llvm::Value*> args;
             args.push_back(v1_value);
             args.push_back(index_ext);
+            LOG(FATAL) << "Unsupported";
             llvm::Value * shuffle_data = build_ptr_->CreateCall( permvar_float_256_ ,args );
             res = shuffle_data;
         } else if( lanes == VECTOR4 && base_data_type == DOUBLE ){
@@ -704,7 +749,8 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
 /////////////////////////
 
     } else {
-        res = build_ptr_->CreateShuffleVector( v1_value, v2_value, index_value);
+        //res = build_ptr_->CreateShuffleVector( v1_value, v2_value, index_value);
+        res = build_ptr_->CreateCall(permvar_double_512_, {v1_value,  index_value});
     }
     return res;
 }
@@ -735,7 +781,8 @@ llvm::Value * LLVMCodeGen::CodeGen_(Reduce * stat) {
         }
     }
     llvm::Value * LLVMCodeGen::LLVMBroadCast( llvm::Value * value, const int lanes) {
-         llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), lanes, false) );
+         //llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), lanes, false) );
+         llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), 2, true) );
         value = build_ptr_->CreateInsertElement(undef, value, Zero_);
         return build_ptr_->CreateShuffleVector(value, undef, ZeroVec_);
    

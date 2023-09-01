@@ -1,0 +1,75 @@
+
+all: libdynvec spmv pagerank spmv32
+LKFILE= type.o parse.o tools_set.o transform_data.o node2state.o pass.o state_formulation.o state_redirect_var.o state_optimization.o intelligent_unroll.o llvm_common.o util.o llvm_codegen.o statement.o statement_print.o csr_matrix.o bit2addr.o tools_set.o Timers.o mmio.o 
+libdynvec: $(LKFILE)
+	$(AR) -rcvs $(BUILD_PATH)/libdynvec.a $^
+
+pagerank: $(LKFILE) pagerank.o
+	$(LD) $^ $(LDFLAGS)  -o $(BUILD_PATH)/$@
+spmv32: $(LKFILE) spmv32.o
+	$(LD)  $^ $(LDFLAGS)  -o $(BUILD_PATH)/$@
+spmv: $(LKFILE) spmv.o
+	$(LD)  $^ $(LDFLAGS)  -o $(BUILD_PATH)/$@
+parse.o:parse/parse.cpp node/node.hpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+tools_set.o:tools_set/tools_set.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+transform_data.o:transform_data/transform_data.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+node2state.o:node/node2state.cpp node/node.hpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+pass.o:pass/state_pass.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+state_formulation.o:pass/state_formulation.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+
+state_optimization.o:pass/state_optimization.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+
+state_redirect_var.o:pass/state_redirect_var.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+intelligent_unroll.o:intelligent_unroll/intelligent_unroll.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+llvm_common.o:llvm_lib/llvm_common.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $(INCLUDE_LLVM_DIR) $< -o $(BUILD_PATH)/$@
+util.o:util/util.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $(INCLUDE_LLVM_DIR) $< -o $(BUILD_PATH)/$@
+llvm_codegen.o:llvm_lib/llvm_codegen.cpp 
+	$(CC) -c $(INCLUDE) $(INCLUDE_LLVM_DIR)  $(CFLAGS) $< -o $(BUILD_PATH)/$@
+type.o:type/type.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+statement.o:statement/statement.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+statement_print.o:statement/statement_print.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+csr_matrix.o:io_matrix/csr_matrix.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGSPermitWarning) $< -o $(BUILD_PATH)/$@
+mmio.o:io_matrix/mmio.c
+	$(CC) -c $(INCLUDE) $(CFLAGSPermitWarning) $< -o $(BUILD_PATH)/$@
+
+Timers.o:Timer/Timers.cpp
+	$(CC) $(INCLUDE) $(CFLAGSPermitWarning) $< -c -o $(BUILD_PATH)/$@
+spmv.o: app/spmv.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+spmv32.o: app/spmv32.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+pagerank.o: app/pagerank.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+
+#	$(CC) $< -S $(CFLAGS) -o sum.S
+#csr_matrix.o:csr_matrix.cpp
+#	$(CC) $< -c -o $(BUILD_PATH)/$@
+
+
+
+bit2addr.o:bit2addr/bit2addr.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+sum.bc: sum
+	./sum 0 0
+
+sum.ll: sum.bc
+	llvm-dis $<
+
+
+clean:
+	-rm -f sum.o sum sum.bc sum.ll $(BUILD_PATH)/*.o

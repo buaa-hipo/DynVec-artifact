@@ -16,9 +16,9 @@
 #define PRINTINT(x) do {    \
                     printf( #x" %d\n" , (x));fflush(stdout); \
                         } while(0)
-void spmv_local(double * y_ptr,const double * x_ptr,const double * data_ptr, const int * column_ptr, const int * row_ptr, const int row_num ) {
+void spmv_local(float * y_ptr,const float * x_ptr,const float * data_ptr, const int * column_ptr, const int * row_ptr, const int row_num ) {
     for (int i = 0 ; i < row_num ; i++ ) {
-        double sum = y_ptr[i];
+        float sum = y_ptr[i];
         for (int j = row_ptr[i]; j < row_ptr[i+1] ; j++ ) {
             sum += x_ptr[column_ptr[j]] * data_ptr[j];
         }
@@ -26,7 +26,7 @@ void spmv_local(double * y_ptr,const double * x_ptr,const double * data_ptr, con
     }
 }
 
-void init_vec(double * dence_vec_ptr, const int data_num , const double data, const bool change = false ) {
+void init_vec(float * dence_vec_ptr, const int data_num , const float data, const bool change = false ) {
     if( change ) {
         for( int i = 0 ; i < data_num ; i++ ) {
             dence_vec_ptr[i] = i;
@@ -62,7 +62,7 @@ void print_vec( T * data_ptr, const int num ) {
     std::cout<<std::endl;
 }
 
-const int max_bits_ = sizeof(double) * ByteSize;
+const int max_bits_ = sizeof(float) * ByteSize;
 #ifdef __AVX512CD__
     const int vector_bits = 512;
 
@@ -77,21 +77,18 @@ const int max_bits_ = sizeof(double) * ByteSize;
 
     const int vector_nums = vector_bits / max_bits_;
     #elif defined __SVE__
-
     const int vector_bits = 256;
 
     const int vector_nums = vector_bits / max_bits_;
-    //int vector_bits = svcntw();
-    //int vector_nums = vector_bits / max_bits_;
     #else
     const int vector_nums = -1;
     #error "Unsupported architetures";
     #endif
 #endif
 
-using FuncType = int(*)( double*,int*,int*,double*,double*);
+using FuncType = int(*)( float*,int*,int*,float*,float*);
 
-void spmv_dynvec(FuncType func, double* y_array, int* row_ptr_all, int* column_ptr, double* x_array, double* data_ptr, int data_num) {
+void spmv_dynvec(FuncType func, float* y_array, int* row_ptr_all, int* column_ptr, float* x_array, float* data_ptr, int data_num) {
     func( y_array,row_ptr_all, column_ptr, x_array,data_ptr );
     for( int i = data_num / vector_nums * vector_nums ; i < data_num ; i++ ) {
         y_array[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
@@ -116,7 +113,7 @@ int main( int argc , char const * argv[] ) {
             printf("Erro: You need to modify a file to read\n");
             return 0;
         }
-        csrSparseMatrixPtr<double> sparseMatrixPtr = matrix_read_csr<double>( argv[1]);
+        csrSparseMatrixPtr<float> sparseMatrixPtr = matrix_read_csr<float>( argv[1]);
         if(sparseMatrixPtr==NULL) {
             printf("Error: sparse matrix not supported\n");
             return 0;
@@ -124,18 +121,18 @@ int main( int argc , char const * argv[] ) {
     #endif
   
     
-    double * data_ptr = sparseMatrixPtr->data_ptr;
+    float * data_ptr = sparseMatrixPtr->data_ptr;
     int * column_ptr = sparseMatrixPtr->column_ptr;
     int * row_ptr = sparseMatrixPtr->row_ptr;
 
     const int data_num = sparseMatrixPtr->data_num;
     const int row_num = sparseMatrixPtr->row_num;
     const int column_num = sparseMatrixPtr->column_num;
-    double * x_array = SIMPLE_MALLOC( double , column_num );
-    double * y_array = SIMPLE_MALLOC( double, row_num );
-    double * y_array_bak = SIMPLE_MALLOC( double , row_num );
+    float * x_array = SIMPLE_MALLOC( float , column_num );
+    float * y_array = SIMPLE_MALLOC( float, row_num );
+    float * y_array_bak = SIMPLE_MALLOC( float , row_num );
     
-    double * y_array_time = SIMPLE_MALLOC( double, row_num );
+    float * y_array_time = SIMPLE_MALLOC( float, row_num );
 //    init_vec(x_array,column_num,1);
 
     init_vec( x_array, column_num , 1 ,true);
@@ -158,9 +155,9 @@ int main( int argc , char const * argv[] ) {
     std::string spmv_str = 
     "input: int * row_ptr,   \
             int * column_ptr,\
-            double * x_array,\
-            double * data_ptr\
-     output:double * y_array \
+            float * x_array,\
+            float * data_ptr\
+     output:float * y_array \
      lambda i : \
             y_array[ row_ptr[i] ] += data_ptr[i] \
             * x_array[column_ptr[i]]\
@@ -168,9 +165,9 @@ int main( int argc , char const * argv[] ) {
     //spmv_str = 
     //"input: int * row_ptr,   \
     //        int * column_ptr,\
-    //        double * x_array,\
-    //        double * data_ptr\
-    // output:double * y_array \
+    //        float * x_array,\
+    //        float * data_ptr\
+    // output:float * y_array \
     // lambda i : \
     //        y_array[ i ] += data_ptr[i] \
     //        ";
@@ -191,7 +188,7 @@ int main( int argc , char const * argv[] ) {
 
     Timer::printTimer("llvmcompile");
     Timer::printTimer("compile");
-    // using FuncType = int(*)( double*,int*,int*,double*,double*);
+    // using FuncType = int(*)( float*,int*,int*,float*,float*);
     // FuncType func = (FuncType)(func_int64);
     // Timer::startTimer("aot");
     //      spmv_local( y_array_bak, x_array,data_ptr,column_ptr,row_ptr,row_num );

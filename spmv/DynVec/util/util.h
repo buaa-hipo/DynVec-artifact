@@ -1,7 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 #include <stdio.h>
-#include "mm_malloc.h"
+//#include "mm_malloc.h"
 
 
 #define SCALAR double
@@ -20,9 +20,9 @@ void set_double (double * array , double data, const int size) ;
 
 #define ANONYMOUSLIB_X86_CACHELINE 64
 #define ROUNDING_UP_256( addr) ( ((((addr) - 1)>>5)+1)<<5  )
-//#define ASSINED_SIZE(size) ( ((((size)-1)>>5)+1) <<5 )
-//#define SIMPLE_MALLOC(type,size) ((type*)malloc(  ASSINED_SIZE(sizeof(type)*(size))) )
-#define SIMPLE_MALLOC(type,size) ((type*)_mm_malloc(  ROUNDING_UP_256( sizeof(type)*(size) ) , ANONYMOUSLIB_X86_CACHELINE ))
+#define ASSINED_SIZE(size) ( ((((size)-1)>>5)+1) <<5 )
+#define SIMPLE_MALLOC(type,size) ((type*)malloc(  ASSINED_SIZE(sizeof(type)*(size))) )
+//#define SIMPLE_MALLOC(type,size) ((type*)_mm_malloc(  ROUNDING_UP_256( sizeof(type)*(size) ) , ANONYMOUSLIB_X86_CACHELINE ))
 int sum_int( const int * array , const int size );
 #define MY_PRINT 1
 

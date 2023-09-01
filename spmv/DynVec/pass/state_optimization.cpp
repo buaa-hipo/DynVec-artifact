@@ -195,7 +195,7 @@ StateMent * OptimizationPass::pass_(Gather * stat) {
                 } else {
                     if(vector_ == VECTOR4) {
                         if(stat->get_type().get_data_type() == DOUBLE) {
-                            int shuffle_vec[VECTOR4];
+                            int64_t shuffle_vec[VECTOR4];
                             shuffle_vec[0] = mask & 0xf;
                             shuffle_vec[1] = (mask>>4) & 0xf;
 
