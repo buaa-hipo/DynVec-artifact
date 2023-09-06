@@ -711,7 +711,13 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
         int lanes = stat_v1_type.get_lanes();
         if( lanes == VECTOR8 && base_data_type == DOUBLE  ) {
             //llvm::Value * index8_vec = build_ptr_->CreateBitCast( index_value, t_int8_vec_ ); 
+            #if defined __AVX2__ || defined __AVX512CD__
+            llvm::Value * index_vec = build_ptr_->CreateZExtOrBitCast( index_value, t_int_vec_ );
+            #elif defined __SVE__ || defined __SVE512__
             llvm::Value * index_vec = build_ptr_->CreateZExtOrBitCast( index_value, t_int64_vec_ );
+            #else
+            #error "Unknown IA";
+            #endif
         
             std::vector<llvm::Value*> args;
             args.push_back(v1_value);
@@ -752,7 +758,11 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
         #if defined __AVX2__ || defined __AVX512CD__
         res = build_ptr_->CreateShuffleVector( v1_value, v2_value, index_value);
         #elif defined __SVE__ || defined __SVE512__
-        res = build_ptr_->CreateCall(permvar_double_512_, {v1_value,  index_value});
+        Type stat_v1_type = stat_v1->get_type();
+        DataType base_data_type = stat_v1_type.get_data_type();
+        assert (base_data_type == DOUBLE && "Only support double");
+        llvm::Value * index_vec = build_ptr_->CreateZExtOrBitCast( index_value, t_int64_vec_ );
+        res = build_ptr_->CreateCall(permvar_double_512_, {v1_value,  index_vec});
         #else
         #error "Unsupported architetures";
         #endif

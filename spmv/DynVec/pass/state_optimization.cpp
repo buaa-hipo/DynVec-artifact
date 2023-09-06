@@ -195,18 +195,19 @@ StateMent * OptimizationPass::pass_(Gather * stat) {
                 } else {
                     if(vector_ == VECTOR4) {
                         if(stat->get_type().get_data_type() == DOUBLE) {
-                            #if defined __AVX2__ || defined __AVX512CD__
+                            //#if defined __AVX2__ || defined __AVX512CD__
                             int shuffle_vec[VECTOR4];
-                            #elif defined __SVE__ || defined __SVE512__
-                            int64_t shuffle_vec[VECTOR4];
-                            #else
-                            #error "Unknown IA";
-                            #endif
+                            //#elif defined __SVE__ || defined __SVE512__
+                            //int64_t shuffle_vec[VECTOR4];
+                            //#else
+                            //#error "Unknown IA";
+                            //#endif
                             shuffle_vec[0] = mask & 0xf;
                             shuffle_vec[1] = (mask>>4) & 0xf;
 
                             shuffle_vec[2] = (mask>>8) & 0xf;
                             shuffle_vec[3] = (mask>>12) & 0xf;
+                            //gather_state_vec.push_back(Shuffle::make( load_data , dzero_vec_const_ ,Const::make_for_shuffle(shuffle_vec ,VECTOR4) ));
                             gather_state_vec.push_back(Shuffle::make( load_data , dzero_vec_const_ ,new Const(shuffle_vec ,VECTOR4) ));
                         } else {
                             LOG(FATAL) << "Unsupported";
@@ -262,6 +263,14 @@ StateMent * OptimizationPass::pass_(Gather * stat) {
 
                     StateMent * load_data_state = Load::make( BitCast::make( IncAddr::make( name_var_map_it->second, load_index),type_scalar_ptr2vector_ptr(name_var_map_it->second->get_type())), compress_mem_mask_const ) ;
                     int shuffle_index_vec[vector_];
+                    //#if defined __AVX2__ || defined __AVX512CD__
+                    //int shuffle_index_vec[vector_];
+                    //#elif defined __SVE__ || defined __SVE512__
+                    //int64_t shuffle_index_vec[vector_];
+                    //#else
+                    //#error "Unknown IA"
+                    //#endif
+
                     int shuffle_index_vec_index = -1;
                     for( int shuffle_index_vec_i = 0 ; shuffle_index_vec_i < vector_ ; shuffle_index_vec_i++  ) {
                         if( (mask & (1<<shuffle_index_vec_i)) != 0 ) {
@@ -276,10 +285,12 @@ StateMent * OptimizationPass::pass_(Gather * stat) {
                         gather_state_vec.push_back( load_data_state );
                     } else {
                         if(stat->get_type().get_data_type() == DOUBLE) {
-                            gather_state_vec.push_back( Shuffle::make( load_data_state, dzero_vec_const_, new Const( shuffle_index_vec, vector_ ) ) );
+                            gather_state_vec.push_back( Shuffle::make( load_data_state, dzero_vec_const_, Const::make_for_shuffle( shuffle_index_vec, vector_ ) ) );
+                            //gather_state_vec.push_back( Shuffle::make( load_data_state, dzero_vec_const_, new Const( shuffle_index_vec, vector_ ) ) );
                         } else {
                             if( stat->get_type().get_data_type() == FLOAT ) {
-                                gather_state_vec.push_back( Shuffle::make( load_data_state, fzero_vec_const_, new Const( shuffle_index_vec, vector_ ) ) );
+                                gather_state_vec.push_back( Shuffle::make( load_data_state, fzero_vec_const_, Const::make_for_shuffle( shuffle_index_vec, vector_ ) ) );
+                                //gather_state_vec.push_back( Shuffle::make( load_data_state, fzero_vec_const_, new Const( shuffle_index_vec, vector_ ) ) );
                             }
                         }
                     }
@@ -350,7 +361,8 @@ StateMent * OptimizationPass::pass_(Add * stat ) {
                 }
                 std::vector<Const*> shuffle_index_const_vec;
                 for( int i = 0 ; i < reduce_num ; i++ )  {
-                    shuffle_index_const_vec.push_back( new Const( reduce_addr_int+ i*vector_,vector_ ) );
+                    shuffle_index_const_vec.push_back( Const::make_for_shuffle( reduce_addr_int+ i*vector_,vector_ ) );
+                    //shuffle_index_const_vec.push_back( new Const( reduce_addr_int+ i*vector_,vector_ ) );
                 }
                 Type v2_state_new_type = v2_state_new->get_type(); 
                 Varience *shuffle_res = new Varience( v2_state_new_type,false );
@@ -371,7 +383,8 @@ StateMent * OptimizationPass::pass_(Add * stat ) {
                 }
                 CompressAddr compress_addr = bit2addr.generate_compress( mask );
 
-                Const * compress_const = new Const( compress_addr.compress_vec, vector_ );
+                Const * compress_const = Const::make_for_shuffle( compress_addr.compress_vec, vector_ );
+                //Const * compress_const = new Const( compress_addr.compress_vec, vector_ );
                 
                 if(v2_state_new_type_basic_data_type == DOUBLE) { 
                     reduce_state_vec.push_back(LetStat::make( shuffle_res, Shuffle::make( shuffle_res , dzero_vec_const_, compress_const ) ));

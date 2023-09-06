@@ -153,5 +153,32 @@ extern Type __int_ptr_v;
 Type type_scalar_ptr2vector_ptr( const Type type ) ;
 Type type_scalar_ptr2ptr_vector( const Type type );
 
+template <typename DataType>
+class TypeToInt
+{
+    public:
+    static auto get_type() {
+        if constexpr (sizeof(DataType) == 1)
+            return (int8_t)NULL;
+        else if constexpr (sizeof(DataType) == 2)
+            return (int16_t)NULL;
+        else if constexpr (sizeof(DataType) == 4)
+            return (int)NULL;
+        else if constexpr (sizeof(DataType) == 8)
+            return (int64_t)NULL;
+        else
+            return (int64_t)NULL;
+    }
+};
+template <typename DataType>
+class ShuffleIndexType {
+    public:
+    #if defined __AVX2__ || defined __AVX512CD__
+    using value=int;
+    #elif defined __SVE__ || defined __SVE512__
+    using value=decltype(TypeToInt<DataType>::get_type());
+    #endif
+};
+
 #endif
 

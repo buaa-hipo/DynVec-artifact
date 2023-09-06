@@ -351,7 +351,7 @@ class Const : public Expr{
         data_ = reinterpret_cast<void*>(ptr);
     }
     template<typename T>
-    Const(T * data, int lanes) {
+    Const(T * data, int lanes, bool set_data_=true) {
         if( typeid(T) == typeid(int) ) {
             type_ = Type( INT,  lanes);
         } else if (typeid(T) == typeid(int64_t)) {
@@ -367,11 +367,51 @@ class Const : public Expr{
         } else{
             LOG(FATAL) << "Unsupport Type";
         }
-        T * tmp = ( T * )malloc(sizeof(T)*lanes);
+        if (set_data_) 
+        {
+            T * tmp = ( T * )malloc(sizeof(T)*lanes);
+            for( int i = 0 ; i < lanes ; i++ ) {
+                tmp[i] = static_cast<T>(data[i]);
+            }
+            data_ = reinterpret_cast<void*>(tmp);
+        }
+    }
+
+    template<typename T, typename O>
+    void init(T * data, int lanes) {
+        if( typeid(O) == typeid(int) ) {
+            type_ = Type( INT,  lanes);
+        } else if (typeid(O) == typeid(int64_t)) {
+            type_ = Type(INT64, lanes);
+        } else if( typeid(O) == typeid(double) ) {
+            type_ = Type(DOUBLE, lanes);
+        } else if( typeid(O) == typeid(bool) ) {
+            type_ = Type(BOOL,lanes);
+        } else if( typeid(O) == typeid(float) ){
+            type_ = Type(FLOAT,lanes);
+        } else if( typeid(O) == typeid(int8_t) ){ 
+            type_ = Type(INT8,lanes);
+        } else{
+            LOG(FATAL) << "Unsupport Type";
+        }
+        O * tmp = ( O * )malloc(sizeof(O)*lanes);
         for( int i = 0 ; i < lanes ; i++ ) {
-            tmp[i] = data[i];
+            tmp[i] = static_cast<O>(data[i]);
         }
         data_ = reinterpret_cast<void*>(tmp);
+    }
+    template<typename T, typename O=typename ShuffleIndexType<T>::value>
+    //template<typename T, typename O=T>
+    static Const* make_for_shuffle(T * data, int lanes) {
+        Const* c = (Const*)malloc(sizeof(Const));
+        new (c) StateMent;
+        new (c) Expr;
+        new (c) Const(data, lanes, false);
+        ////Const::Const<T, O>(data, lanes);
+        c->init<T,O>(data, lanes);
+        //return new (c, data, lanes)<T,O>Const;
+        return c;
+        //return new Const(data, lanes);
     }
 
     std::string get_type_str() {
