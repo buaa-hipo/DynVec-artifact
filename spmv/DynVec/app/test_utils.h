@@ -179,13 +179,14 @@ std::vector<std::string> splitpath(
     Timer::endTimer(name);\
     Timer::printTimer(name,EVAL_TIMES);\
     Timer::printGFLOPS( name, flops, EVAL_TIMES );\
-    if(papi_initialized) {\
-    for(int k=0;k<__PAPI_SLICE_NUM;++k) {\
-        /*printf("Running %d-th (total %d) event set...\n", k, __PAPI_SLICE_NUM);*/ \
-        test_begin(k);\
-        for(int i=0;i<EVAL_TIMES;++i) { stat; }\
-        test_end(k, EVAL_TIMES);\
-    }\
-    test_output(name);}\
+} while(0)
+    // if(papi_initialized) {\
+    // for(int k=0;k<__PAPI_SLICE_NUM;++k) {\
+    //     /*printf("Running %d-th (total %d) event set...\n", k, __PAPI_SLICE_NUM);*/ \
+    //     test_begin(k);\
+    //     for(int i=0;i<EVAL_TIMES;++i) { stat; }\
+    //     test_end(k, EVAL_TIMES);\
+    // }\
+    // test_output(name);}\
 } while(0)
 

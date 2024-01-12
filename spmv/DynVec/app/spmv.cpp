@@ -21,7 +21,8 @@ void spmv_local(double * y_ptr,const double * x_ptr,const double * data_ptr, con
         double sum = y_ptr[i];
         for (int j = row_ptr[i]; j < row_ptr[i+1] ; j++ ) {
             sum += x_ptr[column_ptr[j]] * data_ptr[j];
-        }
+            //printf("[%d, %d; col=%d]: %lf += %lf * %lf\n", i, j, column_ptr[j], sum - x_ptr[column_ptr[j]] * data_ptr[j], x_ptr[column_ptr[j]], data_ptr[j]);
+	}
         y_ptr[i] += sum;
     }
 }
@@ -42,10 +43,11 @@ template<typename T>
 bool check_equal(const T * v1, const T * v2, const int num ) {
     bool flag = true;
     for( int i = 0 ; i < num ; i++ ) {
-        if( (v1[i]-v2[i]) > 1e-3 || (v2[i]-v1[i]) > 1e-3 ) {
+        if( abs(v1[i]-v2[i])/(1e-6+abs(v1[i]+v2[i])) > 1e-3) {
             flag = false;
-           std::cout<< i<< " "  << v1[i]  << " "<< v2[i]<<"\n";
-        }
+           // std::cout<< i<< " "  << v1[i]  << " "<< v2[i]<<"\n";
+            printf("[%d]: %lf and %lf\n", i, v1[i], v2[i]);
+	}
     }
     if(flag) 
         std::cout<<"Correct"<<std::endl;
@@ -136,12 +138,12 @@ int main( int argc , char const * argv[] ) {
     double * y_array_bak = SIMPLE_MALLOC( double , row_num );
     
     double * y_array_time = SIMPLE_MALLOC( double, row_num );
-//    init_vec(x_array,column_num,1);
+    // init_vec(x_array,column_num,1);
 
     init_vec( x_array, column_num , 1 ,true);
-//    init_vec( x_array, column_num , 1 ,true);
-
-    //init_vec(x_array,column_num,1);
+    // init_vec( x_array, column_num , 1 ,true);
+    // print_vec(x_array, column_num);
+    // init_vec(x_array,column_num,1);
     init_vec( y_array, row_num , 0 );
     init_vec( y_array_bak, row_num , 0 );
 
@@ -213,11 +215,11 @@ int main( int argc , char const * argv[] ) {
     base_name = remove_extension(path.back());
     std::string aot_name = base_name + std::string(".aot");
     spmv_local( y_array_bak, x_array,data_ptr,column_ptr,row_ptr,row_num );
-    //PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
+    //PAPI_TEST_EVAL(10, 500, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
 
     std::string jit_name = base_name + std::string(".jit");
     spmv_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num);
-    //PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
+    //PAPI_TEST_EVAL(10, 500, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
 
     if(with_papi) {
         //papi_fini();

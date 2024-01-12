@@ -1,4 +1,5 @@
 #include "transform_data.hpp"
+#include <iostream>
 #include "util.h"
 class TransformData {
     //data need to be transform
@@ -84,7 +85,7 @@ class TransformData {
         return new_data_ptr;
     }
     int * malloc_new_data( GatherInfo * data_ptr ) {
-        int need_data_num = 0;
+        long need_data_num = 0;
         for( int i = 0 ; i < table_column_num_ ; i++ ) {
             if( data_ptr[i].order_type_ == DisOrder ) {
                 const int mask = data_ptr[i].get_mask() & VEC_MASK_MAX;
@@ -98,6 +99,7 @@ class TransformData {
             } else {
                 LOG(FATAL) << "Unsupported" << i<<data_ptr[i].order_type_;
             }
+            // std::cout<<"need_data_num: "<<need_data_num<<"\n";
         } 
         int * new_data_ptr = NULL;
         if( need_data_num > 0 ) 
@@ -320,6 +322,7 @@ public:
                 auto gather_info_it = gather_map_.find( gather_index );
                 CHECK(gather_info_it != gather_map_.end()) << "Can not find "<<gather_index;
                 int * rearrange_gather_data = rearrange<int,GatherInfo>( gather_info_it->second );
+                std::cout<<"0name: "<<gather_info_it->first<<": "<<gather_info_it->second<<": "<<rearrange_gather_data<<"\n";
     
                 gather_name_new_ptr_map_[gather_index] = rearrange_gather_data;
             }

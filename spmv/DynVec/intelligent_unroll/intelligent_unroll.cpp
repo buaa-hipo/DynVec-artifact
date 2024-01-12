@@ -175,10 +175,10 @@ class IntelligentUnroll{
         #elif defined __AVX2__
             std::string arch_str = "llvm -mcpu=x86-64  -mattr=+fxsr,+mmx,+sse,+sse2,+x87,+fma,+avx2,+avx,+fast-gather";
         #elif defined __SVE512__
-            std::string arch_str = "llvm -target=armv8.1a-pc-linux-elf  -mattr=+sve";
+            std::string arch_str = "llvm -target=armv8.1a-pc-linux-gnu  -mattr=+sve";
         #elif defined __SVE__
             //std::string arch_str = "llvm -mcpu=v8.1a  -mattr=+sve";
-            std::string arch_str = "llvm -target=armv8.1a-pc-linux-elf  -mattr=+sve";
+            std::string arch_str = "llvm -target=armv8.1a-pc-linux-gnu  -mattr=+sve";
         #else 
             #error  "Unsupported architetures"
         #endif

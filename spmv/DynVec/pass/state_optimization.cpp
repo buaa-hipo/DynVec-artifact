@@ -433,7 +433,13 @@ StateMent * OptimizationPass::pass_(Add * stat ) {
                     reduce_state_vec.push_back( LetStat::make(mask_var, ICmpEQ::make( permulation_addr, vecnum_int8_v_const_ ) ) );
 
                     Varience * select_var = new Varience( v2_state_new->get_type());
-                    reduce_state_vec.push_back( LetStat::make(select_var, Select::make(  fzero_vec_const_,shuffle_simd, mask_var ) ) );
+                    Const* zero_vec_const_ = nullptr;
+                    if (shuffle_simd->get_type().get_data_type() == FLOAT) {
+                        zero_vec_const_ = fzero_vec_const_;
+                    } else {
+                        zero_vec_const_ = dzero_vec_const_;
+                    }
+                    reduce_state_vec.push_back( LetStat::make(select_var, Select::make(  zero_vec_const_,shuffle_simd, mask_var ) ) );
                     reduce_state_vec.push_back(LetStat::make( shuffle_res, Add::make( select_var, shuffle_res ) ));
                 }
 

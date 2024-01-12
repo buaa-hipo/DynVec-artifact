@@ -833,7 +833,7 @@ class Select : public Expr {
     protected:
 
     Select( StateMent *v1,StateMent *v2, StateMent *index ) : v1_(v1),v2_(v2),index_(index) {
-        CHECK( v1->get_type() == v2->get_type()) << "the type of v1 and v2 is not equal\n";
+        CHECK( v1->get_type() == v2->get_type()) << "the type of v1 and v2 is not equal\n" << "v1: " << v1->get_type().str() << "\n" << "v2: "<<v2->get_type().str()<<"\n";
         CHECK( index->get_type() == __bool_v ) << "the lanes of index is not equal";
         type_ = v1->get_type();
     }
