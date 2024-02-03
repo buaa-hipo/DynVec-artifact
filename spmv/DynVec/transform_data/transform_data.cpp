@@ -1,6 +1,31 @@
 #include "transform_data.hpp"
 #include <iostream>
 #include "util.h"
+
+int* rearrange_ptr;
+size_t rearrange_num;
+FILE* rearrange_file = nullptr;
+char suffix = '0'-1;
+
+void record_rearrange(int* ptr, size_t num) {
+    rearrange_ptr = ptr;
+    rearrange_num = num;
+    suffix++;
+}
+void save_rearrange() {
+    if (!rearrange_ptr) {
+        return;
+    }
+        if (!rearrange_file) {
+            rearrange_file = fopen("rearrange.dat", "w");
+        }
+        fprintf(rearrange_file, "%lld:", rearrange_ptr);
+        for (int i = 0; i < rearrange_num; ++i) {
+            fprintf(rearrange_file, "%d,", rearrange_ptr[i]);
+        }
+        fprintf(rearrange_file, "\n");
+        fflush(rearrange_file);
+}
 class TransformData {
     //data need to be transform
     const std::map<std::string, Type > & name_type_map_;
@@ -41,6 +66,7 @@ class TransformData {
     TYPE * malloc_new_data( TYPE * data_ptr ) { \
         TYPE * new_data_ptr = new TYPE[ table_column_num_ * vector_];\
         if(new_data_ptr == NULL) LOG(FATAL)  << "malloc failed";\
+        record_rearrange((int*)new_data_ptr, table_column_num_ * vector_ * sizeof(TYPE)/sizeof(int)); \
         return new_data_ptr;\
     }
 
@@ -82,6 +108,7 @@ class TransformData {
         int * new_data_ptr = NULL;
         if( need_data_num > 0 ) 
             new_data_ptr = ( int* )malloc(sizeof( int ) *  need_data_num );
+        record_rearrange(new_data_ptr, need_data_num);
         return new_data_ptr;
     }
     int * malloc_new_data( GatherInfo * data_ptr ) {
@@ -104,6 +131,7 @@ class TransformData {
         int * new_data_ptr = NULL;
         if( need_data_num > 0 ) 
             new_data_ptr = ( int* )malloc(sizeof( int ) *  need_data_num );
+        record_rearrange(new_data_ptr, need_data_num);
         return new_data_ptr;
     }
     int rearrange_elem(const int index, GatherInfo * data_ptr,int i,int * new_data_ptr) {
@@ -181,6 +209,7 @@ class TransformData {
         int * new_data_ptr = NULL;
         if( need_data_num > 0 ) 
             new_data_ptr = ( int* )malloc(sizeof( int ) *  need_data_num );
+        record_rearrange(new_data_ptr, need_data_num);
         return new_data_ptr;
     }
 
@@ -244,6 +273,7 @@ public:
             }
         }
         }
+        save_rearrange();
        return new_data_ptr;
     }
 
@@ -270,6 +300,7 @@ public:
             }
         }
         }
+        save_rearrange();
        return new_data_ptr;
     }
     

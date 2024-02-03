@@ -196,7 +196,7 @@ class IntelligentUnroll{
         llvm_module_ptr_->Init( arch_str );
       
         Timer::startTimer("llvmcompile");
-        uint64_t func = llvm_module_ptr_->GetFunction("function");
+        uint64_t func = llvm_module_ptr_->GetFunction("spmv_dyn");
 
         Timer::endTimer("llvmcompile");
 

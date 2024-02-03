@@ -4,6 +4,7 @@
 #include <llvm/IR/IntrinsicsX86.h>
 #include "statement.hpp"
 #include <map>
+#include <fstream>
 #include "llvm_lib/llvm_common.h"
 #include "llvm_lib/llvm_log.h"
 #include "llvm_lib/llvm_print.hpp"
@@ -203,6 +204,13 @@ class LLVMCodeGen {
     void AddFunction( FuncStatement * func_state ) ;
     void PrintModule() {
         LLVMLOG(INFO) << *mod_ptr_;
+        std::string ir;
+        llvm::raw_string_ostream output_str(ir);
+        output_str << *mod_ptr_;
+        std::ofstream os;
+        os.open("spmv.ll");        
+        os<<ir;
+        os.close();
     }
 };
 #endif

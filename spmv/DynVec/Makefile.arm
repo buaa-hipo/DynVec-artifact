@@ -13,7 +13,7 @@ INCLUDE=-Iparse/ -Inode/ -Ilog/ -Itype/ -Ihash/ -Itools_set/ -Istatement/ -Ipass
 #CFLAGS=-march=$(ARCH) -std=c++11 -O3 -ffast-math  -frtti -Wall  -fPIC
 #CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -mavx2 -g -D __AVX2__
 #CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -mavx512cd
-CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -g -D __SVE__ -march=armv8-a+sve #--sysroot=/usr/aarch64-linux-gnu
+CFLAGS= -std=c++17 -O3 -ffast-math  -frtti -Wall  -fPIC -g -D __SVE__ -march=armv8-a+sve #--sysroot=/usr/aarch64-linux-gnu
 CFLAGSPermitWarning=$(CFLAGS)
 #-Werror
 
@@ -33,11 +33,13 @@ LINK_DIR=build/
 #AR=xiar
 AR=aarch64-linux-gnu-ar
 
-all: libdynvec spmv pagerank
+all: libdynvec spmv pagerank spmv_aot
 LKFILE= type.o parse.o tools_set.o transform_data.o node2state.o pass.o state_formulation.o state_redirect_var.o state_optimization.o intelligent_unroll.o llvm_common.o util.o llvm_codegen.o statement.o statement_print.o csr_matrix.o bit2addr.o tools_set.o Timers.o mmio.o 
 libdynvec: $(LKFILE)
 	$(AR) -rcvs libdynvec.a $^
 
+spmv_aot: $(LKFILE) spmv_aot.o function.o rearrange.o
+	$(LD) $^ $(LDFLAGS) -T spmv.ld -o $@
 pagerank: $(LKFILE) pagerank.o
 	$(LD) $^ $(LDFLAGS)  -o $@
 
@@ -100,6 +102,15 @@ sum.bc: sum
 
 sum.ll: sum.bc
 	llvm-dis $<
+
+spmv_aot.o: app/spmv_aot.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
+
+function.o: spmv.ll
+	llc -mattr=+sve -O0 ./spmv.ll -o spmv.s
+	$(CC) $(CFLAGS) spmv.s -c -o function.o
+rearrange.o: rearrange.c
+	$(CC) $(CFLAGS) rearrange.cpp -c 
 
 
 clean:

@@ -143,7 +143,7 @@ class FuncStatement : public StateMent {
     FuncStatement( const Type &ret_type, const std::vector<Type> &args_type, const std::vector<std::string> & args_name ) {
         ret_ = new Varience(ret_type);
         args_ = new std::vector<Varience*>();
-        func_name_ = "function" ;
+        func_name_ = "spmv_dyn" ;
         const int args_len = args_type.size();
         args_->resize( args_len,nullptr );
         for(int i = 0 ; i < args_len ; i++) {
@@ -154,7 +154,7 @@ class FuncStatement : public StateMent {
     FuncStatement( const Type &ret_type, const std::vector<Type> &args_type) {
         ret_ = new Varience(ret_type);
         args_ = new std::vector<Varience*>();
-        func_name_ = "function" ;
+        func_name_ = "spmv_dyn" ;
         const int args_len = args_type.size();
         args_->resize( args_len,nullptr );
         for(int i = 0 ; i < args_len ; i++) {
