@@ -42,6 +42,7 @@
 class ParseClass{
     private:
     unsigned int max_bits_;
+    unsigned int index;
     std::vector<std::string> scatter_impermulate_var_set_;
     Type output_var_type_;
     Token current_token_;
@@ -71,6 +72,7 @@ class ParseClass{
         std::string & output_name
         ):
         max_bits_(0),
+        index(0),
         root_node_ptr_(root_node_ptr),
         gather_set_(gather_set),
         scatter_set_(scatter_set),
@@ -97,7 +99,7 @@ class ParseClass{
     }
 
 Token get_next_token(const std::string &expr) {
-    static unsigned int index = 0;
+    // static unsigned int index = 0;
     Token token;
     for( ; index < expr.size() && (expr[index] == ' ' || expr[index]=='\n');  index++ ) ;
 
@@ -520,7 +522,6 @@ int parse_expression(
             return vector_bits / max_bits_;
             #elif defined __SVE__
             const int vector_bits = 256;
-
             return vector_bits / max_bits_;
             #else
             #error  "Unsupported architetures"

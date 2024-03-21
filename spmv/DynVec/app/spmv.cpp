@@ -45,9 +45,8 @@ bool check_equal(const T * v1, const T * v2, const int num ) {
     for( int i = 0 ; i < num ; i++ ) {
         if( abs(v1[i]-v2[i])/(1e-6+abs(v1[i]+v2[i])) > 1e-3) {
             flag = false;
-           // std::cout<< i<< " "  << v1[i]  << " "<< v2[i]<<"\n";
+	    }
             printf("[%d]: %lf and %lf\n", i, v1[i], v2[i]);
-	}
     }
     if(flag) 
         std::cout<<"Correct"<<std::endl;

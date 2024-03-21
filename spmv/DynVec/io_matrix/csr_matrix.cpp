@@ -271,10 +271,10 @@ csrSparseMatrixPtr<VALUE_TYPE> matrix_read_csr( const char * filename ) {
     // set csrValA to 1, easy for checking floating-point results
     for (int i = 0; i < nnzA; i++) {
 //#ifndef DEBUG
-        csrValA[i] = rand() % 10;
+        //csrValA[i] = rand() % 10;
 
 //#else
-        //csrValA[i] = 1;
+        csrValA[i] = 1;
 //#endif
     }
 

@@ -1,4 +1,5 @@
 #include "tools_set.hpp"
+#include <assert.h>
 #include "hash_feature_table.hpp"
 #include "log.h"
 std::ostream & operator<<( std::ostream &stream , const DisorderAddr & in ) {
