@@ -12,6 +12,7 @@ class OptimizationPass : public StateMentPass{
         std::map<std::string, Varience * > gather_scatter_has_load_info_shuffle_;
         Const * fzero_vec_const_;
         Const * dzero_vec_const_;
+        Const * dinf_vec_const_;
         Const * vecnum_int8_v_const_ ;
     public:
     const std::map<std::string,GatherInfo*> &gather_map_;
@@ -64,6 +65,12 @@ class OptimizationPass : public StateMentPass{
 	    }
 
         dzero_vec_const_ = new Const( dzero_vec , vector_ );
+        double dinf_vec[vector_];
+        for( int i = 0 ; i < vector_ ; i++ ) {
+            dinf_vec[i] = 999;
+	    }
+
+        dinf_vec_const_ = new Const( dinf_vec , vector_ );
         float fzero_vec[vector_];
         for( int i = 0 ; i < vector_ ; i++ ) {
             fzero_vec[i] = 0;
@@ -79,6 +86,7 @@ class OptimizationPass : public StateMentPass{
 virtual    StateMent* pass_(Block * stat ) ;
 virtual    StateMent* pass_(Gather * stat   ) ;
 virtual    StateMent* pass_(Add * stat   );
+virtual    StateMent* pass_(Min * stat   );
 virtual    StateMent* pass_(Scatter * stat  ) ;
 
 virtual    StateMent* pass_(Load * stat  ) ;
@@ -328,6 +336,135 @@ StateMent * OptimizationPass::pass_(Gather * stat) {
         //doesn't have gather information, not optimize it
         return StateMentPass::pass_(stat); 
     }
+}
+StateMent * OptimizationPass::pass_(Min * stat ) { 
+        std::string  index_name = stat->index_name_;
+        const auto& reduction_map_it = reduction_map_.find( index_name);
+         
+                // LOG(INFO);
+        if( reduction_map_it != reduction_map_.end() ) {
+            StateMent * v1_state_new = pass( stat->get_v1());
+            StateMent * v2_state_new = pass( stat->get_v2());
+            
+
+            std::vector<StateMent *> reduce_state_vec;
+//            reduce_state_vec.push_back( Print::make( v2_state_new ) );
+ //           Varience * shuffle_res = new Varience(v2_state_new->get_type()); 
+//            StateMent * add_new_state = LetStat::make( shuffle_res, v2_state_new);
+            ReductionInfo reduction_info = (reduction_map_it->second)[index_];
+            
+            const auto & reduction_name_new_var_map_it = reduction_name_new_var_map_.find( index_name );
+            Varience * reduction_info_var = const_cast<Varience*>(reduction_name_new_var_map_it->second);
+            if(reduction_info.order_type_ == IncContinue) {
+                int mask = reduction_info.get_mask()&VEC_MASK_MAX;
+                Bit2Addr bit2addr(vector_);
+                TransAddr trans_addr = bit2addr.generate( mask );
+                int reduce_num = trans_addr.num;
+                int * reduce_addr_int = (int*)malloc(sizeof(int)* vector_ * reduce_num );
+                const char * reduce_addr = trans_addr.addr;
+                for( int i = 0 ; i < reduce_num ; i++ ) {
+                    for( int j = 0 ; j < vector_ ; j++ ) {
+                        reduce_addr_int[ i* vector_ + j ] = (int)reduce_addr[ i * vector_ + j ];
+                    }
+                }
+                std::vector<Const*> shuffle_index_const_vec;
+                for( int i = 0 ; i < reduce_num ; i++ )  {
+                        LOG(INFO) << reduce_addr_int+ i*vector_;
+                    shuffle_index_const_vec.push_back( Const::make_for_shuffle( reduce_addr_int+ i*vector_,vector_ ) );
+                    //shuffle_index_const_vec.push_back( new Const( reduce_addr_int+ i*vector_,vector_ ) );
+                }
+                Type v2_state_new_type = v2_state_new->get_type(); 
+                Varience *shuffle_res = new Varience( v2_state_new_type,false );
+                reduce_state_vec.push_back( LetStat::make( shuffle_res ,v2_state_new ) );
+                DataType v2_state_new_type_basic_data_type = v2_state_new_type.get_data_type();
+                for( int reduce_i = 0 ; reduce_i < reduce_num ; reduce_i++ ) {
+                    Varience * shuffle_simd = new Varience( v2_state_new_type );
+                    if(v2_state_new_type.get_data_type() == DOUBLE) { 
+                        reduce_state_vec.push_back(LetStat::make( shuffle_simd, Shuffle::make( shuffle_res , dinf_vec_const_, shuffle_index_const_vec[reduce_i] )));
+                    } else if(v2_state_new_type.get_data_type() == FLOAT) {
+                    
+                        reduce_state_vec.push_back(LetStat::make( shuffle_simd, Shuffle::make( shuffle_res , fzero_vec_const_, shuffle_index_const_vec[reduce_i] )));
+                    } else {
+                        LOG(FATAL) << "Unsupported";
+                    }
+                    reduce_state_vec.push_back(LetStat::make( shuffle_res, Min::make( shuffle_simd, shuffle_res ) ));
+
+                }
+                CompressAddr compress_addr = bit2addr.generate_compress( mask );
+
+                Const * compress_const = Const::make_for_shuffle( compress_addr.compress_vec, vector_ );
+                //Const * compress_const = new Const( compress_addr.compress_vec, vector_ );
+                
+                if(v2_state_new_type_basic_data_type == DOUBLE) { 
+                    reduce_state_vec.push_back(LetStat::make( shuffle_res, Shuffle::make( shuffle_res , dinf_vec_const_, compress_const ) ));
+                } else if(v2_state_new_type_basic_data_type == FLOAT) {
+                    // TODO: inf
+                    reduce_state_vec.push_back(LetStat::make( shuffle_res, Shuffle::make( shuffle_res , fzero_vec_const_, compress_const )));
+                } else {
+                
+                        LOG(FATAL) << "Unsupported";
+                }
+
+                 reduce_state_vec.push_back(Min::make( v1_state_new, shuffle_res)) ;
+                 return CombinStatVec(reduce_state_vec);
+            } else if(reduction_info.order_type_ == OrderEquel) {
+                    // TODO: we should use min reduce, the reduce codegen in llvm_codegen only support add
+                LOG(FATAL);
+                 StateMent * ret = Min::make(v1_state_new,MinReduce::make( v2_state_new)) ;
+                 return ret;
+                 
+            } else if( reduction_info.order_type_ == DisOrder ){
+                LOG(FATAL);
+                const int reduce_num = reduction_info.get_mask() & VEC_MASK_MAX ;
+                Varience *shuffle_res = new Varience( v2_state_new->get_type(),false );
+                reduce_state_vec.push_back( LetStat::make( shuffle_res ,v2_state_new ) );
+
+                for( int reduce_i = 0 ; reduce_i < reduce_num ; reduce_i++ ) {
+                    Varience * permulation_addr;
+                    permulation_addr = new Varience( __dynvec_int8_v );
+                    reduce_state_vec.push_back( LetStat::make( permulation_addr , Load::make(BitCast::make( reduction_info_var, __dynvec_int8_v_ptr )) ));
+
+                    if(vector_ == VECTOR8) {
+                        reduce_state_vec.push_back( LetStat::make( reduction_info_var , IncAddr::make( reduction_info_var, new Const(2) ) ));
+                    } else if (vector_ == VECTOR16){
+                                                
+                        reduce_state_vec.push_back( LetStat::make( reduction_info_var , IncAddr::make( reduction_info_var, new Const(4) ) ));
+
+                    } else if(vector_ == VECTOR4){
+
+                        reduce_state_vec.push_back( LetStat::make( reduction_info_var , IncAddr::make( reduction_info_var, new Const(1) ) ));
+                    } else {
+                        LOG(FATAL) << "Unsupported";
+                    }
+
+                    Varience *shuffle_simd = new Varience( v2_state_new->get_type());
+                    reduce_state_vec.push_back(LetStat::make( shuffle_simd, Shuffle::make( shuffle_res ,  permulation_addr)));                  
+                    Varience * mask_var = new Varience( __bool_v );
+                  //  LOG(INFO);
+                    reduce_state_vec.push_back( LetStat::make(mask_var, ICmpEQ::make( permulation_addr, vecnum_int8_v_const_ ) ) );
+
+                    Varience * select_var = new Varience( v2_state_new->get_type());
+                    Const* zero_vec_const_ = nullptr;
+                    if (shuffle_simd->get_type().get_data_type() == FLOAT) {
+                        zero_vec_const_ = fzero_vec_const_;
+                    } else {
+                        zero_vec_const_ = dzero_vec_const_;
+                    }
+                    reduce_state_vec.push_back( LetStat::make(select_var, Select::make(  zero_vec_const_,shuffle_simd, mask_var ) ) );
+                    reduce_state_vec.push_back(LetStat::make( shuffle_res, Min::make( select_var, shuffle_res ) ));
+                }
+
+                reduce_state_vec.push_back(Min::make( v1_state_new, shuffle_res)) ;
+
+
+                return CombinStatVec(reduce_state_vec);
+            } else {
+                LOG(FATAL) << "Unsupported";
+                return nop_;
+            }
+        } else {
+            return StateMentPass::pass_(stat); 
+        }
 }
 StateMent * OptimizationPass::pass_(Add * stat ) { 
         std::string  index_name = stat->index_name_;
@@ -673,8 +810,29 @@ StateMent * OptimizationInnerReducePass::pass_(Block * stat) {
                             outer_init_state_vec.push_back(state) ;
                         
                         } else {
+                            Min * min_state = dynamic_cast<Min*>( expr_state );
+                            LOG(INFO) << "Min";
+                            if(min_state!=NULL ) {
+                                reduce_var = new Varience( min_state->get_type(),false );
+                                if(reduce_var->get_type() == __double_v) {
+                                    outer_init_state_vec.push_back(LetStat::make(reduce_var,dinf_vec_const_ )) ;
+                                } else if(reduce_var->get_type() == __float_v){
+                                
+                                    outer_init_state_vec.push_back(LetStat::make(reduce_var,fzero_vec_const_ )) ;
+                                } else {
+                                    LOG(FATAL) << "Unsupported";
+                                }
+                                
+                                
+                                inner_reducetion_state_vec.push_back( LetStat::make(reduce_var,Min::make( reduce_var, min_state->get_v2()))) ;
+                                StateMent * min_outer = Min::make(min_state->get_v1(),reduce_var);
+                                min_outer->set_index_name( min_state->index_name_ );
+                                outer_reducetion_state_vec.push_back( LetStat::make( let_stat->get_res(), min_outer )) ;
+                                outer_reducetion_state_vec.back()->set_node_name( output_name_ );
+                            } else {
                     
-                            LOG(FATAL) << "Unsupported";
+                                LOG(FATAL) << "Unsupported";
+                            }
                         }
                     }
                 } else {
