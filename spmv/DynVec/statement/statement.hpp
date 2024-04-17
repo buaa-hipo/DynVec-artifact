@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <map>
+#include <atomic>
 
 #include <set>
 extern std::map<std::string,int>  classname_typeid_map;
@@ -47,10 +48,12 @@ class Varience :public StateMent{
     void * ptr_;
     std::set<std::string> name_set_;
     std::string get_unique_name() {
-        static int name_index = 0;
+        // static int name_index = 0;
+        static std::atomic_int atomic_name_index{0};
+        int name_index = atomic_name_index.fetch_add(1);
         std::stringstream ss ;
-        ss << "__" << name_index;
-        name_index++;
+        ss << "__" << name_index-1;
+        // name_index++;
         auto name_set_find_ = name_set_.find( ss.str() );
         while(name_set_find_ != name_set_.end() ) {
             ss.str(std::string());
@@ -337,6 +340,7 @@ class Const : public Expr{
             type_ = __bool;
         } else if( typeid(uint64_t) == typeid(T) ){
             type_ = __dynvec_int64;
+            printf("[CONST] %p\n", data);
         } else if( typeid(float) == typeid(T) ){
             type_ = __float;
         } else if( typeid(int8_t) == typeid(T) ) {

@@ -203,7 +203,7 @@ class LLVMCodeGen {
 
     void AddFunction( FuncStatement * func_state ) ;
     void PrintModule() {
-        LLVMLOG(INFO) << *mod_ptr_;
+        // LLVMLOG(INFO) << *mod_ptr_;
         std::string ir;
         llvm::raw_string_ostream output_str(ir);
         output_str << *mod_ptr_;
@@ -211,6 +211,7 @@ class LLVMCodeGen {
         os.open("spmv.ll");        
         os<<ir;
         os.close();
+        // exit(0);
     }
 };
 #endif

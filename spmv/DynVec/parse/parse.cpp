@@ -41,6 +41,7 @@
 
 class ParseClass{
     private:
+    int _token_index = 0;
     unsigned int max_bits_;
     std::vector<std::string> scatter_impermulate_var_set_;
     Type output_var_type_;
@@ -97,7 +98,8 @@ class ParseClass{
     }
 
 Token get_next_token(const std::string &expr) {
-    static unsigned int index = 0;
+    // static unsigned int index = 0;
+    int& index = _token_index;
     Token token;
     for( ; index < expr.size() && (expr[index] == ' ' || expr[index]=='\n');  index++ ) ;
 

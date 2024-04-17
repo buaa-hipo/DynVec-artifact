@@ -8,11 +8,14 @@ FILE* rearrange_file = nullptr;
 char suffix = '0'-1;
 
 void record_rearrange(int* ptr, size_t num) {
+    return;
     rearrange_ptr = ptr;
     rearrange_num = num;
     suffix++;
+    printf("[allocate] %p\n", ptr);
 }
 void save_rearrange() {
+    return;
     if (!rearrange_ptr) {
         return;
     }
@@ -25,6 +28,11 @@ void save_rearrange() {
         }
         fprintf(rearrange_file, "\n");
         fflush(rearrange_file);
+}
+void close_rearrange()
+{
+    return;
+    fclose(rearrange_file);
 }
 class TransformData {
     //data need to be transform
@@ -399,5 +407,21 @@ void transform_data(
             );
     //LOG(INFO) << vector;
     transform_data.rearrange_all();
+    for (auto& i: gather_name_new_ptr_map)
+    {
+        printf("gptr: %p\n", i.second);
+    }
+    for (auto& i: reduction_name_new_ptr_map)
+    {
+        printf("rptr: %p\n", i.second);
+    }
+    for (auto& i: scatter_name_new_ptr_map)
+    {
+        printf("sptr: %p\n", i.second);
+    }
+    for (auto& i: name_new_ptr_map)
+    {
+        printf("nptr: %p\n", i.second);
+    }
 }
 

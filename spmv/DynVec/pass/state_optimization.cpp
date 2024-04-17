@@ -4,6 +4,9 @@
 #include "state_pass.hpp"
 
 #include "state_redirect_var.hpp"
+extern void close_rearrange();
+extern void record_rearrange(int* ptr, size_t num); 
+extern void save_rearrange() ;
 class OptimizationPass : public StateMentPass{
     private:
     protected:
@@ -778,11 +781,14 @@ StateMent * optimization_state(
             }
        }
        int * same_feature_range_map_ptr = (int*)malloc(sizeof(int)*same_feature_range_map_vec.size());
+       record_rearrange(same_feature_range_map_ptr, same_feature_range_map_vec.size());
        int i = 0;
        for( auto it : same_feature_range_map_vec ) {
             same_feature_range_map_ptr[i] = it; 
             i++;
        }
+       save_rearrange();
+       close_rearrange();
        if( same_feature_range_map_vec.size() > 0 ) {
        Const * range_num_const = new Const( (uint64_t) same_feature_range_map_ptr );
        Varience * range_num_var = new Varience(__int_ptr,false);

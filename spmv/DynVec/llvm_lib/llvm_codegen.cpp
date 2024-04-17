@@ -1023,7 +1023,7 @@ llvm::Value * LLVMCodeGen::CodeGen_( DetectConflict * stat) {
 llvm::Value* LLVMCodeGen::CodeGen( StateMent * stat ) {
         if(stat==NULL) return NULL;
         using FType = ir_func<llvm::Value*(StateMent*)>; 
-        static FType * ftype_ptr = nullptr;
+        static thread_local FType * ftype_ptr = nullptr;
         if(ftype_ptr == nullptr) {
             ftype_ptr = new FType();
             SET_DISPATCH( StateMent );

@@ -25,7 +25,13 @@
     inline unsigned long rpcc()
     {
             unsigned long time=0;
+            unsigned long freq=0;
 //            asm("rtc %0": "=r" (time) : );
+            #ifdef __SVE__ || __SVE512__
+            asm("mrs %0, CNTVCT_EL0": "=r" (time));
+            asm("mrs %0, CNTFRQ_EL0": "=r" (freq));
+            time = time * 1000000000LL / freq;
+            #endif
             return time;
     }
     void Timer::startTimer(string in) {
