@@ -46,7 +46,10 @@ class LLVMCodeGen {
     Function * permvar_int_256_;
     Function * permvar_float_256_;
     Function * permvar_double_512_;
+    Function * sel_double_512_;
     Function * permvar_float_512_;
+    Function * cmpgt_int64_512_;
+    Function * ptrue_int64_512_;
     Function * permvar_int_512_;
     Function * insert_int_256_;
 
@@ -108,6 +111,7 @@ class LLVMCodeGen {
     llvm::Constant* DZeroVec_;
 
     llvm::Constant * SixTeenVec_;
+    llvm::Constant * VectorVec_;
     llvm::Constant *DZero_ ;
     llvm::Constant *One_ ;
 
@@ -119,6 +123,7 @@ class LLVMCodeGen {
     llvm::Constant * ZeroVec_;
     llvm::Constant * FFFF_;
     llvm::Constant * SixTeen_;
+    llvm::Constant * Vector_;
 
     std::map< Varience*,Value*> var_val_map_;
     llvm::Type * Type2LLVMTypeRemovePointer(const Type & type) ;

@@ -67,7 +67,7 @@ class OptimizationPass : public StateMentPass{
         dzero_vec_const_ = new Const( dzero_vec , vector_ );
         double dinf_vec[vector_];
         for( int i = 0 ; i < vector_ ; i++ ) {
-            dinf_vec[i] = 999;
+            dinf_vec[i] = INFINITY;
 	    }
 
         dinf_vec_const_ = new Const( dinf_vec , vector_ );
@@ -369,7 +369,7 @@ StateMent * OptimizationPass::pass_(Min * stat ) {
                 }
                 std::vector<Const*> shuffle_index_const_vec;
                 for( int i = 0 ; i < reduce_num ; i++ )  {
-                        LOG(INFO) << reduce_addr_int+ i*vector_;
+                        //LOG(INFO) << reduce_addr_int+ i*vector_;
                     shuffle_index_const_vec.push_back( Const::make_for_shuffle( reduce_addr_int+ i*vector_,vector_ ) );
                     //shuffle_index_const_vec.push_back( new Const( reduce_addr_int+ i*vector_,vector_ ) );
                 }
@@ -409,12 +409,10 @@ StateMent * OptimizationPass::pass_(Min * stat ) {
                  return CombinStatVec(reduce_state_vec);
             } else if(reduction_info.order_type_ == OrderEquel) {
                     // TODO: we should use min reduce, the reduce codegen in llvm_codegen only support add
-                LOG(FATAL);
                  StateMent * ret = Min::make(v1_state_new,MinReduce::make( v2_state_new)) ;
                  return ret;
                  
             } else if( reduction_info.order_type_ == DisOrder ){
-                LOG(FATAL);
                 const int reduce_num = reduction_info.get_mask() & VEC_MASK_MAX ;
                 Varience *shuffle_res = new Varience( v2_state_new->get_type(),false );
                 reduce_state_vec.push_back( LetStat::make( shuffle_res ,v2_state_new ) );
@@ -811,7 +809,7 @@ StateMent * OptimizationInnerReducePass::pass_(Block * stat) {
                         
                         } else {
                             Min * min_state = dynamic_cast<Min*>( expr_state );
-                            LOG(INFO) << "Min";
+                            //LOG(INFO) << "Min";
                             if(min_state!=NULL ) {
                                 reduce_var = new Varience( min_state->get_type(),false );
                                 if(reduce_var->get_type() == __double_v) {

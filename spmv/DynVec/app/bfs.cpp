@@ -236,7 +236,7 @@ int main( int argc , char const * argv[] ) {
     name2ptr_map[ "data_ptr" ] = data_ptr;
     name2ptr_map[ "y_array" ] = y_array;
 
-    LOG(INFO) << data_num/vector_nums;
+    // LOG(INFO) << data_num/vector_nums;
 
     Timer::startTimer("compile");
     FuncType func_int64 = (FuncType) compiler( spmv_str,name2ptr_map,data_num/vector_nums );
@@ -257,7 +257,7 @@ int main( int argc , char const * argv[] ) {
     if(with_papi) {
        //papi_init();
     } else {
-       printf("PAPI profiling is disabled.\n");
+       // printf("PAPI profiling is disabled.\n");
     }
 
 

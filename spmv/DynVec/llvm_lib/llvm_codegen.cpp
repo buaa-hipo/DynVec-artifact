@@ -245,11 +245,14 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
         Zero_ = llvm::ConstantInt::get( t_int_ , 0);
 
         SixTeen_ = llvm::ConstantInt::get( t_int_ , 16);
+        
+        Vector_ = llvm::ConstantInt::get( t_int64_ , vector__);
 
         //ZeroVec_ = llvm::ConstantVector::getSplat( vector_, Zero_);
         ZeroVec_ = llvm::ConstantVector::getSplat( vector_, Zero_);
 
         SixTeenVec_ = llvm::ConstantVector::getSplat( vector_, SixTeen_);
+        VectorVec_ = llvm::ConstantVector::getSplat( vector_, Vector_);
         FZero_ = llvm::ConstantFP::get( t_float_ , 0);
 
         FZeroVec_ = llvm::ConstantVector::getSplat( vector_, FZero_);
@@ -267,15 +270,18 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
 //        }
         Null_ = llvm::Constant::getNullValue( t_int_ );
 
-        fprintf(stderr, "before permvar\n");
+        //fprintf(stderr, "before permvar\n");
         permvar_int_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_int_vec_});
         permvar_float_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_float_vec_});
         //permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {});
         permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_double_vec_});
+        sel_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_sel, {t_double_vec_});
+        cmpgt_int64_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_cmpgt, {t_int64_vec_});
+        ptrue_int64_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_ptrue, {t_bool_vec_});
         insert_int_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_insr, {t_int64_vec_, t_int64_});
 
         
-        fprintf(stderr, "after permvar\n");
+        //fprintf(stderr, "after permvar\n");
 }
     llvm::Value* LLVMCodeGen::CodeGen_(StateMent * stat ) {
         LOG(FATAL) << "the statement " << stat->get_class_name() \
@@ -706,9 +712,9 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
     llvm::Value * index_value = CodeGen(stat->get_index());
     std::stringstream ss;
 
-    Const* index_ptr = dynamic_cast<Const*>(stat->get_index());
-    index_ptr->print_data<int64_t>((int64_t*) index_ptr->get_data(), vector__, ss);
-    LOG(INFO) << ss.str();
+    // Const* index_ptr = dynamic_cast<Const*>(stat->get_index());
+    // index_ptr->print_data<int64_t>((int64_t*) index_ptr->get_data(), vector__, ss);
+    // LOG(INFO) << ss.str();
     // using unsigned cmp index value and vector_
     
     llvm::Value * res ;
@@ -769,7 +775,10 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
         DataType base_data_type = stat_v1_type.get_data_type();
         assert (base_data_type == DOUBLE && "Only support double");
         llvm::Value * index_vec = build_ptr_->CreateZExtOrBitCast( index_value, t_int64_vec_ );
-        res = build_ptr_->CreateCall(permvar_double_512_, {v1_value,  index_vec});
+        llvm::Value * v1_perm_value = build_ptr_->CreateCall(permvar_double_512_, {v1_value,  index_vec}); // tbl
+        llvm::Value * ptrue = build_ptr_->CreateCall(ptrue_int64_512_, {build_ptr_->getInt32(31)});
+        llvm::Value * pred = build_ptr_->CreateCall(cmpgt_int64_512_, {ptrue, VectorVec_, index_vec});
+        res = build_ptr_->CreateCall(sel_double_512_, {pred, v1_perm_value,  v2_value});
         #else
         #error "Unsupported architetures";
         #endif
