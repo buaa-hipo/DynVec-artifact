@@ -353,7 +353,7 @@ public:
                 auto gather_info_it = gather_map_.find( gather_index );
                 CHECK(gather_info_it != gather_map_.end()) << "Can not find "<<gather_index;
                 int * rearrange_gather_data = rearrange<int,GatherInfo>( gather_info_it->second );
-                std::cout<<"0name: "<<gather_info_it->first<<": "<<gather_info_it->second<<": "<<rearrange_gather_data<<"\n";
+                // std::cout<<"0name: "<<gather_info_it->first<<": "<<gather_info_it->second<<": "<<rearrange_gather_data<<"\n";
     
                 gather_name_new_ptr_map_[gather_index] = rearrange_gather_data;
             }

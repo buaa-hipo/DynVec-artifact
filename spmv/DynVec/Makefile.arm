@@ -33,7 +33,8 @@ LINK_DIR=build/
 #AR=xiar
 AR=aarch64-linux-gnu-ar
 
-all: libdynvec spmv pagerank spmv_aot bfs
+#all: libdynvec spmv pagerank spmv_aot bfs
+all: libdynvec spmv pagerank bfs
 LKFILE= type.o parse.o tools_set.o transform_data.o node2state.o pass.o state_formulation.o state_redirect_var.o state_optimization.o intelligent_unroll.o llvm_common.o util.o llvm_codegen.o statement.o statement_print.o csr_matrix.o bit2addr.o tools_set.o Timers.o mmio.o 
 libdynvec: $(LKFILE)
 	$(AR) -rcvs libdynvec.a $^
