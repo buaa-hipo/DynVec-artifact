@@ -446,7 +446,7 @@ StateMent * OptimizationPass::pass_(Min * stat ) {
                     if (shuffle_simd->get_type().get_data_type() == FLOAT) {
                         zero_vec_const_ = fzero_vec_const_;
                     } else {
-                        zero_vec_const_ = dzero_vec_const_;
+                        zero_vec_const_ = dinf_vec_const_;
                     }
                     reduce_state_vec.push_back( LetStat::make(select_var, Select::make(  zero_vec_const_,shuffle_simd, mask_var ) ) );
                     reduce_state_vec.push_back(LetStat::make( shuffle_res, Min::make( select_var, shuffle_res ) ));

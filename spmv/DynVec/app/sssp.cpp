@@ -177,22 +177,26 @@ int main(int argc, char const *argv[])
     const int data_num = sparseMatrixPtr->data_num;
     const int row_num = sparseMatrixPtr->row_num;
     const int column_num = sparseMatrixPtr->column_num;
+    double *x_array_time = SIMPLE_MALLOC(double, column_num);
+    double *y_array_time = SIMPLE_MALLOC(double, row_num);
+    init_vec(x_array_time, column_num, INFINITY);
+    init_vec(y_array_time, row_num, INFINITY);
+    x_array_time[src_vertex] = 0;
+    y_array_time[src_vertex] = 0;
+
     double *x_array0 = SIMPLE_MALLOC(double, column_num);
     double *x_array1 = SIMPLE_MALLOC(double, column_num);
     double *y_array = SIMPLE_MALLOC(double, row_num);
     double *y_array_bak = SIMPLE_MALLOC(double, row_num);
-
-    double *y_array_time = SIMPLE_MALLOC(double, row_num);
-
     init_vec(x_array0, column_num, INFINITY);
+    init_vec(y_array, row_num, INFINITY);
     init_vec(x_array1, column_num, INFINITY);
+    init_vec(y_array_bak, row_num, INFINITY);
     x_array0[src_vertex] = 0;
     x_array1[src_vertex] = 0;
-    init_vec(y_array, row_num, INFINITY);
     y_array[src_vertex] = 0;
-    init_vec(y_array_bak, row_num, 0);
+    y_array_bak[src_vertex] = 0;
 
-    init_vec(y_array_time, row_num, 0);
     int *row_ptr_all = SIMPLE_MALLOC(int, data_num);
     int *row_ptr_all_bak = SIMPLE_MALLOC(int, data_num);
     for (int row_i = 0; row_i < row_num; row_i++)
@@ -257,46 +261,18 @@ int main(int argc, char const *argv[])
     std::vector<std::string> path = splitpath(base_name);
     base_name = remove_extension(path.back());
     std::string aot_name = base_name + std::string(".aot");
-    // sssp_naive(y_array_bak, row_ptr, column_ptr, x_array0, data_ptr, column_num, row_num);
-    PAPI_TEST_EVAL(10, 500, flops, aot_name.c_str(), sssp_naive( y_array_time, row_ptr, column_ptr, x_array0, data_ptr, column_num, row_num ) );
+    sssp_naive(y_array_bak, row_ptr, column_ptr, x_array0, data_ptr, column_num, row_num);
+    PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), sssp_naive( y_array_time, row_ptr, column_ptr, x_array0, data_ptr, column_num, row_num ) );
 
     std::string jit_name = base_name + std::string(".jit");
-    // sssp_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array1, data_ptr, data_num, column_num);
-    PAPI_TEST_EVAL(10, 500, flops, jit_name.c_str(), sssp_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array1, data_ptr, data_num, column_num) );
+    sssp_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array1, data_ptr, data_num, column_num);
+    PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), sssp_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array1, data_ptr, data_num, column_num) );
 
     if (with_papi)
     {
         // papi_fini();
     }
 
-    //     func( y_array,row_ptr_all, column_ptr, x_array,data_ptr );
-    //     LOG(INFO) << data_num / vector_nums * vector_nums;
-    //     for( int i = (data_num / vector_nums * vector_nums) ; i < data_num ; i++ ) {
-    //         y_array[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-    //     }
-    // #define WARM_TIME 50
-    //      for( int i = 0 ; i < WARM_TIME ; i++ ) {
-    //         func( y_array_time,row_ptr_all, column_ptr, x_array,data_ptr );
-    //         for( int i = data_num / vector_nums * vector_nums ; i < data_num ; i++ ) {
-
-    //             y_array_time[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-    //         }
-    //      }
-
-    // #define TIMES 1000
-    //     Timer::startTimer("jit");
-    //      for( int i = 0 ; i < TIMES ; i++ ){
-    //         func( y_array_time,row_ptr_all, column_ptr, x_array,data_ptr );
-    //         for( int i = data_num / vector_nums * vector_nums ; i < data_num ; i++ ) {
-
-    //             y_array_time[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-    //         }
-
-    //      }
-
-    //     Timer::endTimer("jit");
-    //     Timer::printTimer("jit",TIMES);
-    //     Timer::printGFLOPS( "jit", data_num * 2 , TIMES );
     if (!check_equal(x_array0, x_array1, column_num))
     {
         return 1;

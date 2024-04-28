@@ -13,7 +13,7 @@ INCLUDE=-Iparse/ -Inode/ -Ilog/ -Itype/ -Ihash/ -Itools_set/ -Istatement/ -Ipass
 #CFLAGS=-march=$(ARCH) -std=c++11 -O3 -ffast-math  -frtti -Wall  -fPIC
 #CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -mavx2 -g -D __AVX2__
 #CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -mavx512cd
-CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -g -D __SVE__ -march=armv8-a+sve #--sysroot=/usr/aarch64-linux-gnu
+CFLAGS= -std=c++17 -O3 -ffast-math  -frtti -Wall  -fPIC -g -D __SVE__ -march=armv8-a+sve #--sysroot=/usr/aarch64-linux-gnu
 CFLAGSPermitWarning=$(CFLAGS)
 #-Werror
 

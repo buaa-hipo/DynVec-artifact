@@ -195,6 +195,7 @@ int main( int argc , char const * argv[] ) {
     double * x_array = SIMPLE_MALLOC( double , column_num );
     int * res0 = SIMPLE_MALLOC( int , column_num );
     int * res1 = SIMPLE_MALLOC( int , column_num );
+    int * res_time = SIMPLE_MALLOC( int , column_num );
     double * y_array = SIMPLE_MALLOC( double, row_num );
     double * y_array_bak = SIMPLE_MALLOC( double , row_num );
     
@@ -268,48 +269,19 @@ int main( int argc , char const * argv[] ) {
     std::string aot_name = base_name + std::string(".aot");
     bfs_naive(src_vertex, y_array_bak, row_ptr, column_ptr, x_array, data_ptr, row_num, column_num, res0);
     // spmv_local( y_array_bak, x_array,data_ptr,column_ptr,row_ptr,row_num );
-    //PAPI_TEST_EVAL(10, 500, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
+    PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), bfs_naive(src_vertex, y_array_bak, row_ptr, column_ptr, x_array, data_ptr, row_num, column_num, res_time) );
 
     memset(x_array, 0, column_num * sizeof(double));
     x_array[src_vertex] = 1;
 
     std::string jit_name = base_name + std::string(".jit");
     bfs_dynvec(src_vertex, (FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res1);
-    //PAPI_TEST_EVAL(10, 500, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
+    PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), bfs_dynvec(src_vertex, (FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res_time) );
     
     if(with_papi) {
         //papi_fini();
     }
 
-    
-//     func( y_array,row_ptr_all, column_ptr, x_array,data_ptr );
-//     LOG(INFO) << data_num / vector_nums * vector_nums;
-//     for( int i = (data_num / vector_nums * vector_nums) ; i < data_num ; i++ ) {
-//         y_array[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-//     }
-// #define WARM_TIME 50
-//      for( int i = 0 ; i < WARM_TIME ; i++ ) {
-//         func( y_array_time,row_ptr_all, column_ptr, x_array,data_ptr );
-//         for( int i = data_num / vector_nums * vector_nums ; i < data_num ; i++ ) {
-
-//             y_array_time[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-//         }
-//      }
-
-// #define TIMES 1000
-//     Timer::startTimer("jit");
-//      for( int i = 0 ; i < TIMES ; i++ ){
-//         func( y_array_time,row_ptr_all, column_ptr, x_array,data_ptr );
-//         for( int i = data_num / vector_nums * vector_nums ; i < data_num ; i++ ) {
-
-//             y_array_time[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-//         }
-
-//      }
-
-//     Timer::endTimer("jit");
-//     Timer::printTimer("jit",TIMES);
-//     Timer::printGFLOPS( "jit", data_num * 2 , TIMES );
     if(!check_equal( res0, res1, column_num )) {
         return 1;
     }
