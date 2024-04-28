@@ -31,6 +31,8 @@
             "Div",
             "End",
             "Comma"
+            "Min",
+            "MinEquel"
         }; 
 
         stream << token_type_str[token.token_type_];
@@ -143,6 +145,14 @@ Token get_next_token(const std::string &expr) {
             token.token_type_ = AddEquel;
         } else {
             token.token_type_ = Add;
+        }
+    } else if( expr[index] == '$' ) {
+        index++;
+        if(expr[index] == '=') {
+            index++;
+            token.token_type_ = MinEquel;
+        } else {
+            LOG(FATAL) << "Unsupported!"; 
         }
     } else if( expr[index] == '*' ) {
          index++;
@@ -392,7 +402,8 @@ void ParseExpr(const std::string & expr) {
     TokenType equal_type = current_token_.token_type_;
     if( equal_type != AddEquel &&
         equal_type != Equel &&
-        equal_type != MultEquel) {
+        equal_type != MultEquel &&
+        equal_type != MinEquel) {
         LOG(FATAL) << "equal type is fatal"; 
     }
 
@@ -405,6 +416,18 @@ void ParseExpr(const std::string & expr) {
             gather_node_ptr->node_name_ = gather_node_ptr->index_name_;
             gather_node_ptr->addr_name_ = output_name_;
             data_ptr = new AddNode( gather_node_ptr, data_ptr );
+            data_ptr->node_name_ = gather_node_ptr->addr_name_;
+
+            data_ptr->index_name_ = gather_node_ptr->index_name_;
+            
+            reduction_set_.insert( gather_node_ptr->index_name_ );
+
+        } else if(equal_type == MinEquel) { // can use macro
+            Node * gather_node_ptr = new GatherNode( addr_ptr, index_node_ptr);
+            gather_node_ptr->index_name_ = index_node_ptr->addr_name_;
+            gather_node_ptr->node_name_ = gather_node_ptr->index_name_;
+            gather_node_ptr->addr_name_ = output_name_;
+            data_ptr = new MinNode( gather_node_ptr, data_ptr );
             data_ptr->node_name_ = gather_node_ptr->addr_name_;
 
             data_ptr->index_name_ = gather_node_ptr->index_name_;
@@ -433,6 +456,13 @@ void ParseExpr(const std::string & expr) {
             load_node_ptr->index_name_ = index_node_ptr->node_name_;
             load_node_ptr->addr_name_ = output_name_;
             data_ptr = new AddNode( load_node_ptr, data_ptr );
+            data_ptr->node_name_ = load_node_ptr->index_name_;
+
+        } else if(equal_type == MinEquel) {
+            LoadNode * load_node_ptr = new LoadNode( addr_ptr);
+            load_node_ptr->index_name_ = index_node_ptr->node_name_;
+            load_node_ptr->addr_name_ = output_name_;
+            data_ptr = new MinNode( load_node_ptr, data_ptr );
             data_ptr->node_name_ = load_node_ptr->index_name_;
 
         } else if(equal_type == MultEquel) {

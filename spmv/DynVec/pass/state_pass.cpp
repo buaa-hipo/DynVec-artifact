@@ -324,7 +324,16 @@ StateMent * StateMentPass::pass_(DetectConflict * stat ) {
     }
 }
 
+StateMent * StateMentPass::pass_(MinReduce * stat ) {
+    StateMent * v1_state = stat->get_v1();
+    StateMent * v1_state_new = pass(v1_state);
+    if( v1_state == v1_state_new  ) {
+        return stat;
+    } else {
+        return MinReduce::make(v1_state_new);
+    }
 
+}
 StateMent * StateMentPass::pass_(Reduce * stat ) {
     StateMent * v1_state = stat->get_v1();
     StateMent * v1_state_new = pass(v1_state);
@@ -389,6 +398,7 @@ StateMent * StateMentPass::pass_(BitCast * stat ) {
 
 PASS_BINARY( Binary,"op" )
 PASS_BINARY( Add, "+");
+PASS_BINARY( Min, "$");
 
 PASS_BINARY( Div, "/");
 PASS_BINARY( Mul, "*");
@@ -420,9 +430,11 @@ StateMent* StateMentPass::pass(StateMent * stat) {
 
         SET_DISPATCH(ICmpEQ);
         SET_DISPATCH( Reduce );
+        SET_DISPATCH( MinReduce );
         SET_DISPATCH(BitCast);
         SET_DISPATCH(Binary);
         SET_DISPATCH(Add);
+        SET_DISPATCH(Min);
         SET_DISPATCH(Mul);
 
         SET_DISPATCH(Div);
