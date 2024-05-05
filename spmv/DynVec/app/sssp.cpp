@@ -177,6 +177,7 @@ int main(int argc, char const *argv[])
     const int data_num = sparseMatrixPtr->data_num;
     const int row_num = sparseMatrixPtr->row_num;
     const int column_num = sparseMatrixPtr->column_num;
+    if(row_num != column_num) return 0;
     double *x_array_time = SIMPLE_MALLOC(double, column_num);
     double *y_array_time = SIMPLE_MALLOC(double, row_num);
     init_vec(x_array_time, column_num, INFINITY);
