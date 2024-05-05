@@ -3,7 +3,7 @@
 #include <assert.h>
 #include "common.h"
 #include "eval.h"
-constexpr int nnz = (65536*2);
+constexpr int nnz = TEST_SIZE;
 constexpr int mask_num = 5;
 
 struct timespec timer_begin, timer_end;

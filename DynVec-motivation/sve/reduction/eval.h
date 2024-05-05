@@ -47,11 +47,11 @@ inline double get_bandwidth(int nnz, double nsec) {
     return bandwidth;
 }
 
-#define WARM_UP 1
+#define WARM_UP 3
 // repeat time to find the best result
-#define REPEAT_TIME 25
+#define REPEAT_TIME 10
 // 1000
-#define EVAL_TIME 10
+#define EVAL_TIME 1
 #define STEP (ARRAY_SIZE/16)
 #define EVAL(TEST, C, A, B, perm, select, nnz, log_fn) do {\
     printf("Evaluating %s:\t", #TEST); fflush(stdout);\
@@ -83,7 +83,7 @@ inline double get_bandwidth(int nnz, double nsec) {
     double best_bw = 0; \
     FILE* fp = fopen(log_fn, "w"); \
     printf("\nVCT:");\
-    for(int k=128/*avoid influence of timing/loops*/;k<=nnz;k+=(k<STEP?k:STEP)) { \
+    for(int k=32/*avoid influence of timing/loops*/;k<=nnz;k+=(k<STEP?k:STEP)) { \
         for(int i=0;i<WARM_UP;i++) \
             TEST(C,A,k);\
         begin_timer();\
