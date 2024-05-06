@@ -22,6 +22,6 @@ typedef struct PageRankStructure {
     float * sum;
     float * rank;
 }PageRankStructure , *PageRankStructurePtr;
-PageRankStructurePtr pagerank_read(std::string file_name ) ;
+PageRankStructurePtr pagerank_read_mtx(std::string file_name ) ;
 
 #endif
