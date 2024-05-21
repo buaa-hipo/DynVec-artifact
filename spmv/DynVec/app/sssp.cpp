@@ -186,6 +186,7 @@ int main(int argc, char const *argv[])
     const int data_num = sparseMatrixPtr->data_num;
     const int row_num = sparseMatrixPtr->row_num;
     const int column_num = sparseMatrixPtr->column_num;
+    if(row_num != column_num) return 0;
     double *x_array_time = SIMPLE_MALLOC(double, column_num);
     double *y_array_time = SIMPLE_MALLOC(double, row_num);
     init_vec(x_array_time, column_num, INFINITY);
@@ -271,11 +272,11 @@ int main(int argc, char const *argv[])
     base_name = remove_extension(path.back());
     std::string aot_name = base_name + std::string(".aot");
     sssp_naive(y_array_bak, row_ptr, column_ptr, x_array0, data_ptr, column_num, row_num);
-    PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), sssp_naive( y_array_time, row_ptr, column_ptr, x_array_time, data_ptr, column_num, row_num ) );
+    PAPI_TEST_EVAL(50, 100, flops, aot_name.c_str(), sssp_naive( y_array_time, row_ptr, column_ptr, x_array_time, data_ptr, column_num, row_num ) );
 
     std::string jit_name = base_name + std::string(".jit");
     sssp_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array1, data_ptr, data_num, column_num, row_num);
-    PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), sssp_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array_time, data_ptr, data_num, column_num, row_num) );
+    PAPI_TEST_EVAL(50, 100, flops, jit_name.c_str(), sssp_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array_time, data_ptr, data_num, column_num, row_num) );
 
     if (with_papi)
     {
