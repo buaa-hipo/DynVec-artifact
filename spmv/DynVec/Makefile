@@ -1,35 +1,45 @@
-#CC=g++
+CC=g++
 #CC=clang++
-CC=icpc
+#CC=icpc
 #CFLAGS=-O3 -ffast-math `llvm-config --cflags` 
-#ARCH=core-avx2
+ARCH=core-avx2
+#ARCH=skylake-avx512
+#ARCH=native
 PAPI_ROOT?=../papi-6.0.0/install/
 #ARCH=knl
-LLVM_BASE?=../llvm-8.0.0/install/
+LLVM_BASE?=/workspace/llvm-8.0.0
 LLVM_INCLUDE=${LLVM_BASE}/include/
 LLVM_LIB=${LLVM_BASE}/lib/
 INCLUDE=-Iparse/ -Inode/ -Ilog/ -Itype/ -Ihash/ -Itools_set/ -Istatement/ -Ipass/ -Ibit2addr/ -Iutil/ -Iio_matrix/ -ITimer/ -Itransform_data/ -Iintelligent_unroll/ -Iinclude/ -I./ -I${LLVM_INCLUDE} -I$(PAPI_ROOT)/include
-#CFLAGS=-march=$(ARCH) -std=c++11 -O3 -ffast-math  -frtti -Wall  -fPIC
-CFLAGS=-xHost -std=c++11 -O3 -ffast-math  -frtti -Wall  -fPIC
+CFLAGS=-march=$(ARCH) -std=c++11 -O3 -ffast-math  -frtti -Wall  -fPIC -g
+#CFLAGS=-xHost -std=c++11 -O3 -ffast-math  -frtti -Wall  -fPIC
 CFLAGSPermitWarning=$(CFLAGS)
 #-Werror
 
 INCLUDE_LLVM_DIR=`llvm-config --cxxflags` 
 #CFLAGS=-g -ffast-math `llvm-config --cflags`
-#LD=g++ 
-LD=icpc
-LDFLAGS= -L${LLVM_LIB} -ffast-math  `llvm-config --cxxflags --ldflags --libs core executionengine  mcjit interpreter analysis native bitwriter --system-libs`   -rdynamic -llzma -std=c++11 -L$(PAPI_ROOT)/lib -lpapi
+LD=g++ 
+#LD=icpc
+LDFLAGS= -L${LLVM_LIB} -ffast-math -lpthread `llvm-config --cxxflags --ldflags --libs core executionengine  mcjit interpreter analysis native bitwriter --system-libs`   -rdynamic -llzma -std=c++11 -L$(PAPI_ROOT)/lib -lpapi
 LINK_DIR=build/ 
 
-#AR=ar
-AR=xiar
+AR=ar
+#AR=xiar
 
-all: libdynvec spmv pagerank
+all: libdynvec spmv pagerank bfs sssp spmv_mt bfs_mt
 LKFILE= type.o parse.o tools_set.o transform_data.o node2state.o pass.o state_formulation.o state_redirect_var.o state_optimization.o intelligent_unroll.o llvm_common.o util.o llvm_codegen.o statement.o statement_print.o csr_matrix.o bit2addr.o tools_set.o Timers.o mmio.o 
 libdynvec: $(LKFILE)
 	$(AR) -rcvs libdynvec.a $^
 
 pagerank: $(LKFILE) pagerank.o
+	$(LD) $^ $(LDFLAGS) -o $@
+spmv_mt: $(LKFILE) spmv_mt.o
+	$(LD) $^ $(LDFLAGS)  -o $@
+bfs_mt: $(LKFILE) bfs_mt.o
+	$(LD) $^ $(LDFLAGS)  -o $@
+bfs: $(LKFILE) bfs.o
+	$(LD) $^ $(LDFLAGS)  -o $@
+sssp: $(LKFILE) sssp.o
 	$(LD) $^ $(LDFLAGS)  -o $@
 
 spmv: $(LKFILE) spmv.o
@@ -76,6 +86,14 @@ Timers.o:Timer/Timers.cpp
 spmv.o: app/spmv.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
 pagerank.o: app/pagerank.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
+bfs.o: app/bfs.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
+sssp.o: app/sssp.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
+spmv_mt.o: app/spmv_mt.cpp
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
+bfs_mt.o: app/bfs_mt.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
 
 #	$(CC) $< -S $(CFLAGS) -o sum.S
