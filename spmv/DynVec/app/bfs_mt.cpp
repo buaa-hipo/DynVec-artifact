@@ -5,6 +5,7 @@
  *     return a + b;
  * }
  */
+#include <omp.h>
 #include <thread>
 #include <atomic>
 using std::thread;
@@ -42,16 +43,16 @@ struct Barrier
             sem_post(&sem_count);
             for (int i = 0; i < c - 1; ++i)
             {
-                printf("release barrier %d\n", id);
-                fflush(stdout);
+                // printf("release barrier %d\n", id);
+                // fflush(stdout);
                 sem_post(&sem_barrier);
             }
         }
         else
         {
             sem_post(&sem_count);
-            printf("fetch barrier %d\n", id);
-            fflush(stdout);
+            // printf("fetch barrier %d\n", id);
+            // fflush(stdout);
             sem_wait(&sem_barrier);
         }
     }
@@ -66,18 +67,18 @@ struct Barrier
             sem_post(&sem_count);
             for (int i = 0; i < c; ++i)
             {
-                printf("release barrier exit %d\n", id);
-                fflush(stdout);
+                // printf("release barrier exit %d\n", id);
+                // fflush(stdout);
                 sem_post(&sem_barrier);
             }
-            printf("exit %d up\n", id);
-            fflush(stdout);
+            // printf("exit %d up\n", id);
+            // fflush(stdout);
         }
         else
         {
             sem_post(&sem_count);
-            printf("exit %d down\n", id);
-            fflush(stdout);
+            // printf("exit %d down\n", id);
+            // fflush(stdout);
             // sem_wait(&sem_barrier);
         }
     }
@@ -93,6 +94,7 @@ Barrier b2(2);
     } while (0)
 void spmv_local(DATATYPE *y_ptr, const DATATYPE *x_ptr, const DATATYPE *data_ptr, const int *column_ptr, const int *row_ptr, const int row_num)
 {
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < row_num; i++)
     {
         DATATYPE sum = 0;
@@ -255,8 +257,60 @@ inline void bfs_dynvec(const int src_vertex, FuncType func, double *y_array, int
         }
         b2.barrier();
     }
-    b1.exit_barrier();
-    b2.exit_barrier();
+    // b1.exit_barrier();
+    // b2.exit_barrier();
+}
+int thread_num;
+inline void bfs_dynvec_mt(const int src_vertex, std::function<void()> *func, double *y_array, int *row_ptr_all, int *column_ptr, double *x_array, double *data_ptr, int data_num, int column_num, int *res)
+{
+    set<int> visited;
+    visited.insert(src_vertex);
+    res[0] = src_vertex;
+    int pre_size = -1;
+    while (visited.size() != pre_size)
+    {
+        pre_size = visited.size();
+        // for (int i = 0; i < column_num; i++) {
+        //     printf("%lf, ", x_array[i]);
+        // }
+        // printf("\n");
+
+        // for (int i = 0; i < column_num; i++) {
+        //     printf("%lf, ", y_array[i]);
+        // }
+        // printf("\n");
+
+#pragma omp parallel for
+        for (int i = 0; i < thread_num; ++i)
+            func[i]();
+        // jit will allocate new data for all the ptr, so we don't need to copy all these ptrs per iteration.
+        // memcpy(column_ptr, column_ptr_bak, data_num);
+        // memcpy(row_ptr_all, row_ptr_all_bak, data_num);
+        // memcpy(data_ptr, data_ptr_bak, data_num);
+        // name2ptr_map[ "row_ptr" ] = row_ptr_all;
+
+        // name2ptr_map[ "column_ptr" ] = column_ptr;
+        // name2ptr_map[ "x_array" ] = x_array;
+        // name2ptr_map[ "data_ptr" ] = data_ptr;
+        // name2ptr_map[ "y_array" ] = y_array;
+        // we don't need to perform jit per iteration cause the x_array will never be transform
+        // func = (FuncType) compiler( spmv_str,name2ptr_map,data_num/vector_nums );
+
+        // b1.barrier();
+        for (int i = 0; i < column_num; i++)
+        {
+            x_array[i] = 0;
+            if (y_array[i] && visited.find(i) == visited.end())
+            {
+                x_array[i] = 1;
+                visited.insert(i);
+                res[visited.size() - 1] = i;
+            }
+        }
+        // b2.barrier();
+    }
+    // b1.exit_barrier();
+    // b2.exit_barrier();
 }
 
 // #define LITTEL_CASE2
@@ -265,10 +319,10 @@ int main(int argc, char const *argv[])
     bool with_papi = false;
     // bfs file src_vertex with_papi
     int src_vertex = atoi(argv[2]);
-    if (argc >= 4)
-    {
-        with_papi = (atoi(argv[3]) != 0);
-    }
+    // if (argc >= 4)
+    // {
+    //     with_papi = (atoi(argv[3]) != 0);
+    // }
 #ifdef LITTEL_CASE
     csrSparseMatrix sparseMatrix = little_test();
     csrSparseMatrixPtr sparseMatrixPtr = &sparseMatrix;
@@ -277,9 +331,9 @@ int main(int argc, char const *argv[])
     csrSparseMatrix sparseMatrix = little_test2(1024, 1024);
     csrSparseMatrixPtr sparseMatrixPtr = &sparseMatrix;
 #else
-    if (argc <= 1)
+    if (argc <= 4)
     {
-        printf("Erro: You need to modify a file to read\n");
+        printf("./bfs_mt <filename> <src-id> <thread-num> <mode>\n");
         return 0;
     }
     csrSparseMatrixPtr sparseMatrixPtr = matrix_read_csr(argv[1]);
@@ -289,6 +343,7 @@ int main(int argc, char const *argv[])
         return 0;
     }
 #endif
+    omp_set_num_threads(atoi(argv[3]));
 
     double *data_ptr = sparseMatrixPtr->data_ptr;
     int *column_ptr = sparseMatrixPtr->column_ptr;
@@ -360,13 +415,13 @@ int main(int argc, char const *argv[])
 
     memset(x_array, 0, column_num * sizeof(double));
     x_array[src_vertex] = 1;
-    int thread_num = 2;
+    thread_num = atoi(argv[3]);
     b1._count_target.store(thread_num);
     b2._count_target.store(thread_num);
     std::thread **threads = new std::thread *[thread_num];
     vector<std::function<void()>> callee;
     int processed_row_num = 0;
-    int mode = 0;
+    int mode = atoi(argv[4]);
     for (int i = 0; i < thread_num; ++i)
     {
 
@@ -452,23 +507,32 @@ int main(int argc, char const *argv[])
             {
                 // spmv_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num);
                 // bfs_dynvec(src_vertex, (FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res1);
-                bfs_dynvec(src_vertex, (FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res1);
+                // bfs_dynvec(src_vertex, (FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res1);
+                func_int64(y_array, row_ptr_all, column_ptr, x_array, data_ptr);
+                for (int i = data_num / vector_nums * vector_nums; i < data_num; i++)
+                    y_array[row_ptr_all[i]] += x_array[column_ptr[i]] * data_ptr[i];
+                // int flops = sparseMatrixPtr->data_num * 2;
+                // std::string base_name(argv[1]);
+                // std::string jit_name = base_name + std::string(".jit");
+                // PAPI_TEST_EVAL1(50, 1000, flops, jit_name.c_str(), bfs_dynvec(src_vertex, (FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res1));
             });
 
         // });
         processed_row_num += row_num;
     }
-    Timer::startTimer("dynvec");
-    for (int i = 0; i < thread_num; ++i)
-    {
-        threads[i] = new thread(callee[i]);
-    }
-    for (int i = 0; i < thread_num; ++i)
-    {
-        threads[i]->join();
-    }
-    Timer::endTimer("dynvec");
-    Timer::printTimer("dynvec");
+    int flops = sparseMatrixPtr->data_num * 2;
+    // Timer::startTimer("dynvec");
+    // for (int i = 0; i < thread_num; ++i)
+    // {
+    //     threads[i] = new thread(callee[i]);
+    // }
+    // for (int i = 0; i < thread_num; ++i)
+    // {
+    //     threads[i]->join();
+    // }
+    // Timer::endTimer("dynvec");
+    // Timer::printTimer("dynvec", 1050);
+    // Timer::printGFLOPS("dynvec", flops, 1050);
 
     // using FuncType = int(*)( double*,int*,int*,double*,double*);
     // FuncType func = (FuncType)(func_int64);
@@ -488,7 +552,7 @@ int main(int argc, char const *argv[])
         printf("PAPI profiling is disabled.\n");
     }
 
-    int flops = data_num * 2;
+    // int flops = data_num * 2;
     std::string base_name(argv[1]);
     std::vector<std::string> path = splitpath(base_name);
     base_name = remove_extension(path.back());
@@ -497,11 +561,11 @@ int main(int argc, char const *argv[])
     // spmv_local( y_array_bak, x_array,data_ptr,column_ptr,row_ptr,row_num );
     memset(x_array, 0, column_num * sizeof(double));
     x_array[src_vertex] = 1;
-    Timer::startTimer("naive");
-    bfs_naive(src_vertex, y_array_time, row_ptr, column_ptr, x_array, data_ptr, row_num, column_num, res0);
-    Timer::endTimer("naive");
-    Timer::printTimer("naive");
-    // PAPI_TEST_EVAL(0, 1, flops, aot_name.c_str(), bfs_naive(src_vertex, y_array_time, row_ptr, column_ptr, x_array, data_ptr, row_num, column_num, res0));
+    // Timer::startTimer("naive");
+    // bfs_naive(src_vertex, y_array_time, row_ptr, column_ptr, x_array, data_ptr, row_num, column_num, res0);
+    // Timer::endTimer("naive");
+    // Timer::printTimer("naive");
+    PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), bfs_naive(src_vertex, y_array_time, row_ptr, column_ptr, x_array, data_ptr, row_num, column_num, res0));
 
     memset(x_array, 0, column_num * sizeof(double));
     x_array[src_vertex] = 1;
@@ -509,6 +573,7 @@ int main(int argc, char const *argv[])
     std::string jit_name = base_name + std::string(".jit");
     // bfs_dynvec(src_vertex, (FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res1);
     // PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), bfs_dynvec(src_vertex, (FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res1));
+    PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), bfs_dynvec_mt(src_vertex, callee.data(), y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num, column_num, res1));
 
     if (with_papi)
     {
