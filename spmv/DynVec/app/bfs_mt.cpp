@@ -94,7 +94,7 @@ Barrier b2(2);
     } while (0)
 void spmv_local(DATATYPE *y_ptr, const DATATYPE *x_ptr, const DATATYPE *data_ptr, const int *column_ptr, const int *row_ptr, const int row_num)
 {
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < row_num; i++)
     {
         DATATYPE sum = 0;
@@ -356,6 +356,8 @@ int main(int argc, char const *argv[])
     memcpy(data_ptr_bak, data_ptr, data_num);
     const int row_num = sparseMatrixPtr->row_num;
     const int column_num = sparseMatrixPtr->column_num;
+    if (column_num != row_num)
+        return 0;
     double *x_array = SIMPLE_MALLOC(double, column_num);
     int *res0 = SIMPLE_MALLOC(int, column_num);
     int *res1 = SIMPLE_MALLOC(int, column_num);

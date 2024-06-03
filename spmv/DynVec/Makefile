@@ -26,12 +26,14 @@ LINK_DIR=build/
 AR=ar
 #AR=xiar
 
-all: libdynvec spmv pagerank bfs sssp spmv_mt bfs_mt
+all: libdynvec spmv pagerank bfs sssp spmv_mt bfs_mt sssp_mt pagerank_mt
 LKFILE= type.o parse.o tools_set.o transform_data.o node2state.o pass.o state_formulation.o state_redirect_var.o state_optimization.o intelligent_unroll.o llvm_common.o util.o llvm_codegen.o statement.o statement_print.o csr_matrix.o bit2addr.o tools_set.o Timers.o mmio.o 
 libdynvec: $(LKFILE)
 	$(AR) -rcvs libdynvec.a $^
 
 pagerank: $(LKFILE) pagerank.o
+	$(LD) $^ $(LDFLAGS) -o $@
+pagerank_mt: $(LKFILE) pagerank_mt.o
 	$(LD) $^ $(LDFLAGS) -o $@
 spmv_mt: $(LKFILE) spmv_mt.o
 	$(LD) $^ $(LDFLAGS)  -o $@
@@ -40,6 +42,8 @@ bfs_mt: $(LKFILE) bfs_mt.o
 bfs: $(LKFILE) bfs.o
 	$(LD) $^ $(LDFLAGS)  -o $@
 sssp: $(LKFILE) sssp.o
+	$(LD) $^ $(LDFLAGS)  -o $@
+sssp_mt: $(LKFILE) sssp_mt.o
 	$(LD) $^ $(LDFLAGS)  -o $@
 
 spmv: $(LKFILE) spmv.o
@@ -87,9 +91,13 @@ spmv.o: app/spmv.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
 pagerank.o: app/pagerank.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
+pagerank_mt.o: app/pagerank_mt.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
 bfs.o: app/bfs.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
 sssp.o: app/sssp.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
+sssp_mt.o: app/sssp_mt.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
 spmv_mt.o: app/spmv_mt.cpp
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@

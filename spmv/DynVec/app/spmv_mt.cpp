@@ -5,6 +5,7 @@
  *     return a + b;
  * }
  */
+#include <omp.h>
 #include "Timers.hpp"
 #include "intelligent_unroll.hpp"
 // #include "dynvec.h"
@@ -124,15 +125,20 @@ void spmv_dynvec(FuncType func, double *y_array, int *row_ptr_all, int *column_p
         printf(" = %lf\n", y_array[row_ptr_all[i]]);
     }
 }
+int thread_num;
+void spmv_dynvec_mt(std::function<void()> *func, double *y_array, int *row_ptr_all, int *column_ptr, double *x_array, double *data_ptr, int data_num)
+{
+#pragma omp parallel for
+    for (int i = 0; i < thread_num; ++i)
+    {
+        func[i]();
+    }
+}
 
 // #define LITTEL_CASE2
 int main(int argc, char const *argv[])
 {
     bool with_papi = false;
-    if (argc >= 3)
-    {
-        with_papi = (atoi(argv[2]) != 0);
-    }
 #ifdef LITTEL_CASE
     csrSparseMatrix sparseMatrix = little_test();
     csrSparseMatrixPtr sparseMatrixPtr = &sparseMatrix;
@@ -172,11 +178,11 @@ int main(int argc, char const *argv[])
 
     init_vec(y_array_time, row_num, 0);
 
-    int thread_num = 4;
+    thread_num = atoi(argv[2]);
     std::thread **threads = new std::thread *[thread_num];
     vector<std::function<void()>> callee;
     int processed_row_num = 0;
-    int mode = 1;
+    int mode = atoi(argv[3]);
     for (int i = 0; i < thread_num; ++i)
     {
 
@@ -259,23 +265,27 @@ int main(int argc, char const *argv[])
         callee.emplace_back(
             [=]()
             {
-                spmv_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num);
+                ((FuncType)func_int64)(y_array, row_ptr_all, column_ptr, x_array, data_ptr);
+                for (int i = data_num / vector_nums * vector_nums; i < data_num; i++)
+                {
+                    y_array[row_ptr_all[i]] += x_array[column_ptr[i]] * data_ptr[i];
+                }
             });
 
         // });
         processed_row_num += row_num;
     }
-    Timer::startTimer("dynvec");
-    for (int i = 0; i < thread_num; ++i)
-    {
-        threads[i] = new thread(callee[i]);
-    }
-    for (int i = 0; i < thread_num; ++i)
-    {
-        threads[i]->join();
-    }
-    Timer::endTimer("dynvec");
-    Timer::printTimer("dynvec");
+    // Timer::startTimer("dynvec");
+    // for (int i = 0; i < thread_num; ++i)
+    // {
+    //     threads[i] = new thread(callee[i]);
+    // }
+    // for (int i = 0; i < thread_num; ++i)
+    // {
+    //     threads[i]->join();
+    // }
+    // Timer::endTimer("dynvec");
+    // Timer::printTimer("dynvec");
 
     // using FuncType = int(*)( double*,int*,int*,double*,double*);
     // FuncType func = (FuncType)(func_int64);
@@ -299,18 +309,20 @@ int main(int argc, char const *argv[])
     int *column_ptr = sparseMatrixPtr->column_ptr;
     int *row_ptr = sparseMatrixPtr->row_ptr;
 
-    // int flops = data_num * 2;
-    // std::string base_name(argv[1]);
-    // std::vector<std::string> path = splitpath(base_name);
-    // base_name = remove_extension(path.back());
-    // std::string aot_name = base_name + std::string(".aot");
-    Timer::startTimer("naive ");
-    spmv_local(y_array_bak, x_array, data_ptr, column_ptr, row_ptr, row_num);
-    Timer::endTimer("naive ");
-    Timer::printTimer("naive ");
-    // PAPI_TEST_EVAL(10, 500, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
+    int flops = data_num * 2;
+    std::string base_name(argv[1]);
+    std::vector<std::string> path = splitpath(base_name);
+    base_name = remove_extension(path.back());
+    std::string aot_name = base_name + std::string(".aot");
+    std::string jit_name = base_name + std::string(".jit");
+    omp_set_num_threads(thread_num);
+    // Timer::startTimer("naive ");
+    // spmv_local(y_array_bak, x_array, data_ptr, column_ptr, row_ptr, row_num);
+    // Timer::endTimer("naive ");
+    // Timer::printTimer("naive ");
+    PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), spmv_local(y_array_bak, x_array, data_ptr, column_ptr, row_ptr, row_num));
 
-    // PAPI_TEST_EVAL(10, 500, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
+    PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), spmv_dynvec_mt(callee.data(), y_array_time, nullptr, column_ptr, x_array, data_ptr, data_num));
 
     if (with_papi)
     {
