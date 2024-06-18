@@ -266,7 +266,7 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
 //        }
         Null_ = llvm::Constant::getNullValue( t_int_ );
 
-        fprintf(stderr, "before permvar\n");
+        // fprintf(stderr, "before permvar\n");
         permvar_int_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_int_vec_});
         permvar_float_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_float_vec_});
         //permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {});
@@ -274,7 +274,7 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
         insert_int_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_insr, {t_int64_vec_, t_int64_});
 
         
-        fprintf(stderr, "after permvar\n");
+        // fprintf(stderr, "after permvar\n");
 }
     llvm::Value* LLVMCodeGen::CodeGen_(StateMent * stat ) {
         LOG(FATAL) << "the statement " << stat->get_class_name() \

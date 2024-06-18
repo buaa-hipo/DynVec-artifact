@@ -138,12 +138,8 @@ int main( int argc , char const * argv[] ) {
     double * y_array_bak = SIMPLE_MALLOC( double , row_num );
     
     double * y_array_time = SIMPLE_MALLOC( double, row_num );
-    // init_vec(x_array,column_num,1);
 
     init_vec( x_array, column_num , 1 ,true);
-    // init_vec( x_array, column_num , 1 ,true);
-    // print_vec(x_array, column_num);
-    // init_vec(x_array,column_num,1);
     init_vec( y_array, row_num , 0 );
     init_vec( y_array_bak, row_num , 0 );
 
@@ -167,15 +163,7 @@ int main( int argc , char const * argv[] ) {
             y_array[ row_ptr[i] ] += data_ptr[i] \
             * x_array[column_ptr[i]]\
             ";
-    //spmv_str = 
-    //"input: int * row_ptr,   \
-    //        int * column_ptr,\
-    //        double * x_array,\
-    //        double * data_ptr\
-    // output:double * y_array \
-    // lambda i : \
-    //        y_array[ i ] += data_ptr[i] \
-    //        ";
+
     std::map<std::string,void*> name2ptr_map;
     name2ptr_map[ "row_ptr" ] = row_ptr_all;
 
@@ -184,7 +172,7 @@ int main( int argc , char const * argv[] ) {
     name2ptr_map[ "data_ptr" ] = data_ptr;
     name2ptr_map[ "y_array" ] = y_array;
 
-    LOG(INFO) << data_num/vector_nums;
+    // LOG(INFO) << data_num/vector_nums;
 
     Timer::startTimer("compile");
     uint64_t func_int64 = compiler( spmv_str,name2ptr_map,data_num/vector_nums );
@@ -193,19 +181,11 @@ int main( int argc , char const * argv[] ) {
 
     Timer::printTimer("llvmcompile");
     Timer::printTimer("compile");
-    // using FuncType = int(*)( double*,int*,int*,double*,double*);
-    // FuncType func = (FuncType)(func_int64);
-    // Timer::startTimer("aot");
-    //      spmv_local( y_array_bak, x_array,data_ptr,column_ptr,row_ptr,row_num );
-
-    // Timer::endTimer("aot");
-
-    // Timer::printTimer("aot");
 
     if(with_papi) {
        //papi_init();
     } else {
-       printf("PAPI profiling is disabled.\n");
+       //printf("PAPI profiling is disabled.\n");
     }
 
 
@@ -215,45 +195,17 @@ int main( int argc , char const * argv[] ) {
     base_name = remove_extension(path.back());
     std::string aot_name = base_name + std::string(".aot");
     spmv_local( y_array_bak, x_array,data_ptr,column_ptr,row_ptr,row_num );
-    //PAPI_TEST_EVAL(10, 500, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
+    PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
 
     std::string jit_name = base_name + std::string(".jit");
     spmv_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num);
-    //PAPI_TEST_EVAL(10, 500, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
+    PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
 
     if(with_papi) {
         //papi_fini();
     }
 
     
-//     func( y_array,row_ptr_all, column_ptr, x_array,data_ptr );
-//     LOG(INFO) << data_num / vector_nums * vector_nums;
-//     for( int i = (data_num / vector_nums * vector_nums) ; i < data_num ; i++ ) {
-//         y_array[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-//     }
-// #define WARM_TIME 50
-//      for( int i = 0 ; i < WARM_TIME ; i++ ) {
-//         func( y_array_time,row_ptr_all, column_ptr, x_array,data_ptr );
-//         for( int i = data_num / vector_nums * vector_nums ; i < data_num ; i++ ) {
-
-//             y_array_time[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-//         }
-//      }
-
-// #define TIMES 1000
-//     Timer::startTimer("jit");
-//      for( int i = 0 ; i < TIMES ; i++ ){
-//         func( y_array_time,row_ptr_all, column_ptr, x_array,data_ptr );
-//         for( int i = data_num / vector_nums * vector_nums ; i < data_num ; i++ ) {
-
-//             y_array_time[ row_ptr_all[ i ] ] += x_array[column_ptr[i]] * data_ptr[ i ];
-//         }
-
-//      }
-
-//     Timer::endTimer("jit");
-//     Timer::printTimer("jit",TIMES);
-//     Timer::printGFLOPS( "jit", data_num * 2 , TIMES );
     if(!check_equal( y_array_bak, y_array, row_num )) {
         return 1;
     }

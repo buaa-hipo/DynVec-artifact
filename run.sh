@@ -30,21 +30,3 @@ echo "Evaluating DynVec..."
 { set -e; sh scripts/run_tools/spmv/run_dynvec.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
-#echo "Evaluating CSR5..."
-#{ set -e; sh scripts/run_tools/spmv/run_csr5.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
-#	echo -e "\033[32m Success! \033[0m" || \
-#		(echo -e "\033[31m Failed! \033[0m"; exit -1)
-#echo "Evaluating MKL..."
-#{ set -e; sh scripts/run_tools/spmv/run_mkl.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
-#	echo -e "\033[32m Success! \033[0m" || \
-#		(echo -e "\033[31m Failed! \033[0m"; exit -1)
-#
-#echo "Evaluating CVR..."
-#result=`lscpu | grep -i -o avx512`
-#if [ "$result" != "" ]; then
-#	{ set -e; sh scripts/run_tools/spmv/run_cvr.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
-#		echo -e "\033[32m Success! \033[0m" || \
-#			(echo -e "\033[31m Failed! \033[0m"; exit -1)
-#else
-#    echo "CVR must be run on machines with AVX512 support, skipping..."
-#fi
