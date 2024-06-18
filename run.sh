@@ -10,7 +10,7 @@ source scripts/env.sh
 #echo "-------- Evaluating motivation -------"
 #echo "Log file: $RUNLOG_ROOT/motivation.log"
 #cd DynVec-motivation
-#make -f Makefile.avx2 run > $RUNLOG_ROOT/motivation.log 2>&1 && \
+#make -f Makefile run > $RUNLOG_ROOT/motivation.log 2>&1 && \
 #	echo -e "\033[32m Success! \033[0m" || \
 #		(echo -e "\033[31m Failed! \033[0m"; exit -1)
 #cd ${CUR_DIR}
@@ -30,3 +30,9 @@ echo "Evaluating DynVec..."
 { set -e; sh scripts/run_tools/spmv/run_dynvec.sh $SPMV_DATA $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/run.log 2>&1 && \
 	echo -e "\033[32m Success! \033[0m" || \
 		(echo -e "\033[31m Failed! \033[0m"; exit -1)
+# plotting the performance data
+echo "--------- Plotting data ---------"
+echo "Log file: $RUNLOG_ROOT/plot_data.log"
+{ set -e; sh scripts/analysis/draw.sh $SPMV_LOG_ROOT $SPMV_LOG_ROOT; } > $SPMV_LOG_ROOT/plot_data.log 2>&1 && \
+        echo -e "\033[32m Success! \033[0m" || \
+                (echo -e "\033[31m Failed! \033[0m"; exit -1)

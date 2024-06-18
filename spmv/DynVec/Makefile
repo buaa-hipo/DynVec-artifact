@@ -1,36 +1,18 @@
-#CC=g++
 CC=aarch64-linux-gnu-g++-10
-#CC=icpc
-#CFLAGS=-O3 -ffast-math `llvm-config --cflags` 
-#ARCH=core-avx2
 PAPI_ROOT?=../papi-6.0.0/install/
-#ARCH=knl
-#LLVM_BASE?=../llvm-8.0.0/install/
 LLVM_BASE?=/workspace/llvm-16.0.0-aarch64/
 LLVM_INCLUDE=${LLVM_BASE}/include/
 LLVM_LIB=${LLVM_BASE}/lib/
 INCLUDE=-Iparse/ -Inode/ -Ilog/ -Itype/ -Ihash/ -Itools_set/ -Istatement/ -Ipass/ -Ibit2addr/ -Iutil/ -Iio_matrix/ -ITimer/ -Itransform_data/ -Iintelligent_unroll/ -Iinclude/ -I./ -I${LLVM_INCLUDE} -I$(PAPI_ROOT)/include
-#CFLAGS=-march=$(ARCH) -std=c++11 -O3 -ffast-math  -frtti -Wall  -fPIC
-#CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -mavx2 -g -D __AVX2__
-#CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -mavx512cd
-CFLAGS= -std=c++17 -O0 -ffast-math  -frtti -Wall  -fPIC -g -D __SVE__ -march=armv8-a+sve #--sysroot=/usr/aarch64-linux-gnu
+CFLAGS= -std=c++17 -O3 -ffast-math  -frtti -Wall  -fPIC -g -D __SVE__ -march=armv8-a+sve #--sysroot=/usr/aarch64-linux-gnu
 CFLAGSPermitWarning=$(CFLAGS)
-#-Werror
 
-#INCLUDE_LLVM_DIR=`llvm-config --cxxflags` 
-INCLUDE_LLVM_DIR=-I/root/llvm-16.0.0-aarch64/include -std=c++17   -fno-exceptions -fno-rtti -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
-#CFLAGS=-g -ffast-math `llvm-config --cflags`
-#LD=g++ 
+INCLUDE_LLVM_DIR=-I${LLVM_INCLUDE} -std=c++17   -fno-exceptions -fno-rtti -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 LD=aarch64-linux-gnu-g++-10
-#LD=icpc
-#LDFLAGS= -L${LLVM_LIB} -ffast-math  `llvm-config --cxxflags --ldflags --libs core executionengine  mcjit interpreter analysis native bitwriter --system-libs`   -rdynamic  -std=c++14 -L$(PAPI_ROOT)/lib -lpapi
-LD_LLVM_FLAGS=-I/root/llvm-16.0.0-aarch64/include -std=c++17   -fno-exceptions -fno-rtti -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -L/root/llvm-16.0.0-aarch64/lib  -lLLVM-16
-#LDFLAGS= -L${LLVM_LIB} -ffast-math  `llvm-config --cxxflags --ldflags --libs core executionengine  mcjit interpreter analysis native bitwriter --system-libs`   -rdynamic -std=c++14 -L$(PAPI_ROOT)/lib --sysroot=/usr/aarch64-linux-gnu -static
+LD_LLVM_FLAGS=-I${LLVM_INCLUDE} -std=c++17   -fno-exceptions -fno-rtti -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -L${LLVM_LIB}  -lLLVM-16
 LDFLAGS= -L${LLVM_LIB} -ffast-math  ${LD_LLVM_FLAGS}   -rdynamic -std=c++14 -L$(PAPI_ROOT)/lib #--sysroot=/usr/aarch64-linux-gnu 
 LINK_DIR=build/ 
 
-#AR=ar
-#AR=xiar
 AR=aarch64-linux-gnu-ar
 
 all: libdynvec spmv

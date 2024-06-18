@@ -25,3 +25,15 @@ reduce_sve_256_double: reduce_sve.cc eval.h common.h
 
 clean:
 	rm -f gather_sve gather_sve_128 gather_sve_256* gather_sve_512* reduce_sve_512 reduce_sve_256 reduce_sve_512_double reduce_sve_256_double scatter_sve scatter_sve_128 scatter_sve_256* scatter_sve_512*
+
+define run_eval
+        mkdir data
+        ./$(1)
+        mv data $(2)
+endef
+
+run:
+	$(call run_eval,gather_sve_256,data-gather-float-256)
+	$(call run_eval,gather_sve_256_double,data-gather-double-256)
+	$(call run_eval,scatter_sve_256,data-scatter-float-256)
+	$(call run_eval,scatter_sve_256_double,data-scatter-double-256)
