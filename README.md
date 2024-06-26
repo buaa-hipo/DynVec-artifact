@@ -26,6 +26,8 @@ After cloning the repo, use the build script to install DynVec:
 ./build.sh
 ```
 
+**Attention: The CC and LLVM_BASE in spmv/DynVec/Makefile need to be set accordingly!**
+
 ## Running SpMV
 
 To run spmv with prepared dataset (`data.tar.gz` in release), we just need to use the run script:
@@ -47,6 +49,8 @@ make -j && make run
 The results are stored in `DynVec-motivation/data`. 
 
 And the visualization results is named motivation_exp.pdf.
+
+**Attention: The CC in DynVec-motivaton/Makefile need to be set accordingly!**
 
 ## Tested platforms
 
