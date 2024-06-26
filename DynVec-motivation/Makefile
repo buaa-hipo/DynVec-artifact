@@ -24,16 +24,21 @@ reduce_sve_256_double: reduce_sve.cc eval.h common.h
 	${CC} -O3 -g -march=armv8-a+sve -DUSE_256 -DUSE_DOUBLE reduce_sve.cc -o reduce_sve_256_double -msve-vector-bits=256
 
 clean:
-	rm -f gather_sve gather_sve_128 gather_sve_256* gather_sve_512* reduce_sve_512 reduce_sve_256 reduce_sve_512_double reduce_sve_256_double scatter_sve scatter_sve_128 scatter_sve_256* scatter_sve_512*
+	rm -f gather_sve gather_sve_128 gather_sve_256* gather_sve_512* reduce_sve_512 reduce_sve_256 reduce_sve_512_double reduce_sve_256_double scatter_sve scatter_sve_128 scatter_sve_256* scatter_sve_512* data-*
 
 define run_eval
-        mkdir data
+        mkdir data-tmp
         ./$(1)
-        mv data $(2)
+        mv data-tmp $(2)
 endef
 
 run:
+	rm -rf data-*
 	$(call run_eval,gather_sve_256,data-gather-float-256)
 	$(call run_eval,gather_sve_256_double,data-gather-double-256)
 	$(call run_eval,scatter_sve_256,data-scatter-float-256)
 	$(call run_eval,scatter_sve_256_double,data-scatter-double-256)
+	mkdir -p data/data-double data/data-single
+	cp data-gather-float-256/* data-scatter-float-256/* data/data-single
+	cp data-gather-double-256/* data-scatter-double-256/* data/data-double 
+	python3 motivation.py

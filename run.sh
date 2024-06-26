@@ -7,14 +7,14 @@ mkdir -p $RUNLOG_ROOT
 echo "Setting environments ..."
 source scripts/env.sh
 # running motivation
-#echo "-------- Evaluating motivation -------"
-#echo "Log file: $RUNLOG_ROOT/motivation.log"
-#cd DynVec-motivation
-#make -f Makefile run > $RUNLOG_ROOT/motivation.log 2>&1 && \
-#	echo -e "\033[32m Success! \033[0m" || \
-#		(echo -e "\033[31m Failed! \033[0m"; exit -1)
-#cd ${CUR_DIR}
-# prepare data for evaluation run
+echo "-------- Evaluating motivation -------"
+echo "Log file: $RUNLOG_ROOT/motivation.log"
+cd DynVec-motivation
+make run > $RUNLOG_ROOT/motivation.log 2>&1 && \
+	echo -e "\033[32m Success! \033[0m" || \
+		(echo -e "\033[31m Failed! \033[0m"; exit -1)
+cd ${CUR_DIR}
+ prepare data for evaluation run
 echo "-------- Preparing data --------"
 echo "Log file: $RUNLOG_ROOT/get_data.log"
 sh scripts/run_tools/get_data.sh > $RUNLOG_ROOT/get_data.log 2>&1 && \

@@ -36,6 +36,18 @@ To run spmv with prepared dataset (`data.tar.gz` in release), we just need to us
 
 The results are stored in `log/run_log/spmv/log_spmv_*`.
 
+## Running Motivation
+
+To run motivation, we just need to change the dir to `DynVec-motivation` and run this commend:
+
+```
+make run
+```
+
+The results are stored in `DynVec-motivation/data`. 
+
+And the visualization results is named motivation_exp.pdf.
+
 ## Tested platforms
 
 - AArch64 machine with SVE (256-bits) enabled
