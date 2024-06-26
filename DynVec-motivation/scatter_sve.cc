@@ -83,8 +83,6 @@ int main() {
     INDEX_TYPE* B = (INDEX_TYPE*)malloc(TEST_SIZE*sizeof(INDEX_TYPE));
     INDEX_TYPE* B2= (INDEX_TYPE*)malloc(TEST_SIZE*sizeof(INDEX_TYPE));
     int nnz = TEST_SIZE;
-    printf("Input nnz:\n");
-    scanf("%d", &nnz);
     for(int i=0;i<nnz;++i) {
         B[i] = i;
         A[i] = i+0.1;

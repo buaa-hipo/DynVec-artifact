@@ -59,7 +59,7 @@ inline double get_bandwidth(int nnz, double nsec) {
     double best_bw = 0; \
     FILE* fp = fopen(log_fn, "w"); \
     printf("\nVCT:");\
-    for(int k=128/*avoid influence of timing/loops*/;k<=nnz;k+=(k<STEP?k:STEP)) { \
+    for(int k=32/*avoid influence of timing/loops*/;k<=nnz;k+=(k<STEP?k:STEP)) { \
         for(int i=0;i<WARM_UP;i++) \
             TEST(C,A,B,reinterpret_cast<PERM_T*>(perm),reinterpret_cast<PERM_T*>(select),k);\
         begin_timer();\

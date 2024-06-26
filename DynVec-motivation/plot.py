@@ -60,7 +60,8 @@ def draw_all(ax, is_DP, show_y, show_legend, gather_log, load_log):
             _y_1_s = [ 1 for i in x1[:LOG_X_SUB] ]
             ax.plot([x for x in x1], _y_1, linestyle='--', color='red')
     if show_legend:
-        ax.legend(loc=(-1.9,0.85), ncol=4)
+        # ax.legend(loc=(-1.9,0.85), ncol=4)
+        ax.legend(ncol=2)
 
 def draw_scatter(ax, show_y, show_legend, scatter_all, plat, x_plat):
     if show_y:
@@ -74,7 +75,8 @@ def draw_scatter(ax, show_y, show_legend, scatter_all, plat, x_plat):
     ax.plot(scatter_all['single']['speedup'][0], scatter_all['single']['speedup'][1], label='SP', color='black')
     ax.plot([32, max(scatter_all['double']['speedup'][0])], [1, 1], linestyle='--', color='red')
     if show_legend:
-        ax.legend(loc=(-1.05,0.05), ncol=2)
+        # ax.legend(loc=(-1.05,0.05), ncol=2)
+        ax.legend(ncol=2)
 
 data_list = [
     "data/data-double/",
@@ -104,7 +106,7 @@ for i in range(len(num_list)):
 
     gather_all = [ DATA_FOLD+'gather_'+str(x)+'.dat' for x in range(1, NUM+1) ]
     load_all = [ DATA_FOLD+'load_'+str(x)+'.dat' for x in range(1, NUM+1) ]
-    draw_all(ax[i%2], i%2==0, i<2, i==5, gather_all, load_all)
+    draw_all(ax[i%2], i%2==0, True, True, gather_all, load_all)
 
 platform = [ 'kunpeng']
 x_plat = ['\n(d) KP920b']
@@ -129,6 +131,6 @@ for p in platform:
     scatter_all['single']['speedup'] = (scatter_all['single']['scatter'][0], 
                                         [ scatter_all['single']['store'][1][i]/scatter_all['single']['scatter'][1][i] 
                                             for i in range(0, len(scatter_all['single']['store'][1])) ] )
-    draw_scatter(ax[2], k==0, k==2, scatter_all, p, x_plat[k])
+    draw_scatter(ax[2], True, True, scatter_all, p, x_plat[k])
     k = k + 1
 fig.savefig('motivation_exp.pdf', bbox_inches = 'tight')

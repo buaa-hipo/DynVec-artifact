@@ -306,9 +306,7 @@ void read_with_8xload(FLOAT* C, FLOAT* A, INDEX_TYPE* B, PERM_T* perm, SELECT_T*
 int main()
 {
     printf("vector size = %d!\n", VECTOR_LEN);
-    int nnz = 8192;
-    printf("Input nnz:\n");
-    scanf("%d", &nnz);
+    int nnz = TEST_SIZE;
     int max_extra_lines = 4; // for extra loads
     FLOAT* C = (FLOAT*)malloc(nnz*sizeof(FLOAT));
     FLOAT* C2= (FLOAT*)malloc(nnz*sizeof(FLOAT));
