@@ -41,7 +41,7 @@ The results are stored in `log/run_log/spmv/log_spmv_*`.
 To run motivation, we just need to change the dir to `DynVec-motivation` and run this commend:
 
 ```
-make run
+make -j && make run
 ```
 
 The results are stored in `DynVec-motivation/data`. 
