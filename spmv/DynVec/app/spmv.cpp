@@ -215,11 +215,11 @@ int main( int argc , char const * argv[] ) {
     base_name = remove_extension(path.back());
     std::string aot_name = base_name + std::string(".aot");
     spmv_local( y_array_bak, x_array,data_ptr,column_ptr,row_ptr,row_num );
-    //PAPI_TEST_EVAL(10, 500, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
+    PAPI_TEST_EVAL(10, 500, flops, aot_name.c_str(), spmv_local( y_array_time, x_array,data_ptr,column_ptr,row_ptr,row_num ) );
 
     std::string jit_name = base_name + std::string(".jit");
     spmv_dynvec((FuncType)func_int64, y_array, row_ptr_all, column_ptr, x_array, data_ptr, data_num);
-    //PAPI_TEST_EVAL(10, 500, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
+    PAPI_TEST_EVAL(10, 500, flops, jit_name.c_str(), spmv_dynvec((FuncType)func_int64, y_array_time, row_ptr_all, column_ptr, x_array, data_ptr, data_num) );
 
     if(with_papi) {
         //papi_fini();
