@@ -25,6 +25,7 @@
     } while (0)
 void spmv_local(double *y_ptr, const double *x_ptr, const double *data_ptr, const int *column_ptr, const int *row_ptr, const int row_num)
 {
+    #pragma omp parallel for
     for (int i = 0; i < row_num; i++)
     {
         double sum = y_ptr[i];
@@ -152,7 +153,7 @@ int main(int argc, char const *argv[])
         printf("Erro: You need to modify a file to read\n");
         return 0;
     }
-    csrSparseMatrixPtr sparseMatrixPtr = matrix_read_csr(argv[1]);
+    csrSparseMatrixPtr<double> sparseMatrixPtr = matrix_read_csr<double>(argv[1]);
     if (sparseMatrixPtr == NULL)
     {
         printf("Error: sparse matrix not supported\n");
@@ -320,7 +321,17 @@ int main(int argc, char const *argv[])
     // spmv_local(y_array_bak, x_array, data_ptr, column_ptr, row_ptr, row_num);
     // Timer::endTimer("naive ");
     // Timer::printTimer("naive ");
+    if (mode == 0)
+    {
+        omp_set_schedule(omp_sched_static, 0);
+    }
+    else
+    {
+        omp_set_schedule(omp_sched_dynamic, 0);
+    }
     PAPI_TEST_EVAL(50, 1000, flops, aot_name.c_str(), spmv_local(y_array_bak, x_array, data_ptr, column_ptr, row_ptr, row_num));
+
+    omp_set_schedule(omp_sched_static, 0);
 
     PAPI_TEST_EVAL(50, 1000, flops, jit_name.c_str(), spmv_dynvec_mt(callee.data(), y_array_time, nullptr, column_ptr, x_array, data_ptr, data_num));
 

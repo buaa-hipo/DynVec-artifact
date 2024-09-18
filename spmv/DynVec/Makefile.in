@@ -1,5 +1,5 @@
 
-all: libdynvec spmv pagerank spmv32 bfs sssp
+all: libdynvec spmv pagerank spmv32 bfs sssp spmv_mt
 LKFILE= type.o parse.o tools_set.o transform_data.o node2state.o pass.o state_formulation.o state_redirect_var.o state_optimization.o intelligent_unroll.o llvm_common.o util.o llvm_codegen.o statement.o statement_print.o csr_matrix.o bit2addr.o tools_set.o Timers.o mmio.o 
 libdynvec: $(LKFILE)
 	$(AR) -rcvs $(BUILD_PATH)/libdynvec.a $^
@@ -9,6 +9,8 @@ pagerank: $(LKFILE) pagerank.o
 spmv32: $(LKFILE) spmv32.o
 	$(LD)  $^ $(LDFLAGS)  -o $(BUILD_PATH)/$@
 spmv: $(LKFILE) spmv.o
+	$(LD)  $^ $(LDFLAGS)  -o $(BUILD_PATH)/$@
+spmv_mt: $(LKFILE) spmv_mt.o
 	$(LD)  $^ $(LDFLAGS)  -o $(BUILD_PATH)/$@
 bfs: $(LKFILE) bfs.o
 	$(LD)  $^ $(LDFLAGS)  -o $(BUILD_PATH)/$@
@@ -60,6 +62,8 @@ bfs.o: app/bfs.cpp
 sssp.o: app/sssp.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
 spmv32.o: app/spmv32.cpp 
+	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
+spmv_mt.o: app/spmv_mt.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
 pagerank.o: app/pagerank.cpp 
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $(BUILD_PATH)/$@
