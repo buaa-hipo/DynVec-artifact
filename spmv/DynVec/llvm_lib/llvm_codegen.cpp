@@ -771,6 +771,22 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
     }
     return res;
 }
+llvm::Value * LLVMCodeGen::CodeGen_(MinReduce * stat) {
+        StateMent * v1 = stat->get_v1();
+        llvm::Value * v1_value = CodeGen( v1);
+        if(v1->get_type().get_data_type() == DOUBLE || v1->get_type().get_data_type() == FLOAT) {
+            llvm::FastMathFlags FMFFast;
+            FMFFast.setFast();
+            llvm::CallInst* ret = build_ptr_->CreateFPMinReduce(v1_value);
+            ret->setFastMathFlags(FMFFast);
+            return ret;
+        } else if(v1->get_type().get_data_type() == INT) {
+            return build_ptr_->CreateIntMinReduce(v1_value);
+        } else {
+            LOG(FATAL) << "the type does not support";
+            return Null_;
+        }
+    }
 llvm::Value * LLVMCodeGen::CodeGen_(Reduce * stat) {
         StateMent * v1 = stat->get_v1();
         llvm::Value * v1_value = CodeGen( v1);
@@ -861,6 +877,21 @@ llvm::Value * LLVMCodeGen::CodeGen_(Add * stat) {
 
         return Null_;
     }
+llvm::Value * LLVMCodeGen::CodeGen_(Min * stat) {
+        StateMent * v1 = stat->get_v1();
+        llvm::Value * v1_value = CodeGen( v1);
+        StateMent * v2 = stat->get_v2();
+        llvm::Value * v2_value = CodeGen( v2);
+        if(v1->get_type().get_data_type() == DOUBLE || v1->get_type().get_data_type() == FLOAT ||  v1->get_type().get_data_type() == INT) {
+
+            return build_ptr_->CreateMinNum( v1_value , v2_value);
+            
+        } else {
+            LOG(FATAL) << "the type does not support";
+        }
+
+        return Null_;
+}
 llvm::Value * LLVMCodeGen::CodeGen_(Minus * stat) {
         StateMent * v1 = stat->get_v1();
         llvm::Value * v1_value = CodeGen( v1);
@@ -1049,12 +1080,14 @@ llvm::Value* LLVMCodeGen::CodeGen( StateMent * stat ) {
             SET_DISPATCH(Store);
             SET_DISPATCH(Shuffle);
             SET_DISPATCH( Reduce );
+            SET_DISPATCH( MinReduce );
             SET_DISPATCH(BitCast);
             SET_DISPATCH(Binary);
 
             SET_DISPATCH(ICmpEQ);
             SET_DISPATCH(Select);
             SET_DISPATCH(Add);
+            SET_DISPATCH(Min);
             SET_DISPATCH(Mul);
 
             SET_DISPATCH(Div);

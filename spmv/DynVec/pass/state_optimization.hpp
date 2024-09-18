@@ -7,6 +7,7 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <cmath>
 #include <ulimit.h>
 #include<climits>
 #include <unordered_map>

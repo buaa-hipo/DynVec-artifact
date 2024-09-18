@@ -178,6 +178,7 @@ class LLVMCodeGen {
     Value * CodeGen_(Shuffle * stat) ;
 
     Value * CodeGen_(Reduce * stat) ;
+    Value * CodeGen_(MinReduce * stat) ;
 
     Value * CodeGen_(BroadCast* stat) ;
 
@@ -186,6 +187,7 @@ class LLVMCodeGen {
     Value * CodeGen_(Binary * stat) ;
 
     Value * CodeGen_(Add * stat) ;
+    Value * CodeGen_(Min * stat) ;
 
      Value * CodeGen_(Minus * stat) ;
 

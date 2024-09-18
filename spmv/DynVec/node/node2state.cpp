@@ -246,6 +246,28 @@ class Node2StateMent{
                 seed_state_vec.push_back( LetStat::make( load_node_it->second , Load::make( addr_var ) ) ); 
 
             } else {
+             MinNode * min_node = dynamic_cast< MinNode*>( top_node_ptr );
+            if( min_node != NULL ) { 
+                auto min_node_it = _node2var_map.find( min_node ); 
+                if( min_node_it == _node2var_map.end() ) {
+                    LOG(FATAL) << "Can not find Varience";
+                }
+                Node * left_node = min_node->left_node_;
+                Node * right_node = min_node->right_node_;
+
+                Varience * left_var = find_var_from_node_tree( left_node );
+
+                Varience * right_var = find_var_from_node_tree( right_node );
+                StateMent * min_stat = Min::make(left_var,right_var);
+                min_stat->set_index_name(min_node->index_name_);
+                min_stat->set_node_name(min_node->node_name_);
+                seed_state_vec.push_back( LetStat::make( min_node_it->second, min_stat ) ); 
+                
+                seed_state_vec.back()->set_node_name( min_node->node_name_ );
+
+                seed_state_vec.back()->set_index_name( min_node->index_name_ );
+
+            } else {
              AddNode * add_node = dynamic_cast< AddNode*>( top_node_ptr );
             if( add_node != NULL ) { 
                 auto add_node_it = _node2var_map.find( add_node ); 
@@ -321,7 +343,7 @@ class Node2StateMent{
 
             } else {
             LOG(FATAL) << "Unsupported";
-            }}}}}}}}
+            }}}}}}}}}
        }
         std::vector<StateMent*>  seed_state_vec_reverse;
         seed_state_vec_reverse.resize( seed_state_vec.size(), nullptr );

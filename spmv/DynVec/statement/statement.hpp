@@ -997,7 +997,30 @@ class ComplexReduce : public Expr {
     }
 
 };
+class MinReduce : public Expr {
+    StateMent * v1_;
 
+    protected:
+
+    MinReduce( StateMent * v1 ) : v1_(v1){
+        Type * type_ptr_tmp = &v1_->get_type();
+        type_ = *type_ptr_tmp;
+        type_.set_lanes(1);
+    }
+    public:
+    static constexpr const char* class_name_ = "minreduce";
+    static StateMent * make( StateMent * v1 ) {
+        StateMent * stat_ptr = new MinReduce( v1 );
+        return stat_ptr;
+    }
+    virtual std::string get_class_name() {
+        return class_name_;
+    }
+    StateMent * get_v1() {
+        return v1_;
+    }
+
+};
 class Reduce : public Expr {
     StateMent * v1_;
 
@@ -1122,6 +1145,7 @@ BINARY(Div);
 BINARY(Minus);
 BINARY(Mul);
 BINARY(Add);
+BINARY(Min);
 
 StateMent* CombinStatVec( const std::vector<StateMent*> &stat_vec );
 #endif

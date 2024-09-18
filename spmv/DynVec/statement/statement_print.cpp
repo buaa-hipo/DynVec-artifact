@@ -49,6 +49,7 @@ void print_(Select * stat, std::ostream&os ) ;
 
 void print_(ICmpEQ * stat, std::ostream&os ) ;
 void print_(Reduce * stat, std::ostream&os ) ;
+void print_(MinReduce * stat, std::ostream&os ) ;
 
 void print_(BroadCast * stat, std::ostream&os ) ;
 
@@ -57,6 +58,7 @@ void print_(BitCast * stat, std::ostream&os ) ;
 void print_(Binary * stat, std::ostream&os ) ;
 
 void print_(Add * stat, std::ostream&os );
+void print_(Min * stat, std::ostream&os );
 
 void print_(Div * stat, std::ostream&os ) ;
 void print_(Mul * stat, std::ostream&os ) ;
@@ -253,7 +255,11 @@ void StateMentPrint::print_(DetectConflict * stat, std::ostream&os ) {
     os << ")\n";
 }
 
-
+void StateMentPrint::print_(MinReduce * stat, std::ostream&os ) {
+    os << stat->get_class_name() << " (";
+    print(stat->get_v1(),os);
+    os << ")\n";
+}
 void StateMentPrint::print_(Reduce * stat, std::ostream&os ) {
     os << stat->get_class_name() << " (";
     print(stat->get_v1(),os);
@@ -288,6 +294,7 @@ void StateMentPrint::print_(BitCast * stat, std::ostream&os ) {
 
 PRINT_BINARY( Binary,"op" )
 PRINT_BINARY( Add, "+");
+PRINT_BINARY( Min, "$");
 
 PRINT_BINARY( Div, "/");
 PRINT_BINARY( Mul, "*");
@@ -316,9 +323,11 @@ void StateMentPrint::print(StateMent * stat,std::ostream&os) {
         SET_DISPATCH(Store);
         SET_DISPATCH(Shuffle);
         SET_DISPATCH( Reduce );
+        SET_DISPATCH( MinReduce );
         SET_DISPATCH(BitCast);
         SET_DISPATCH(Binary);
         SET_DISPATCH(Add);
+        SET_DISPATCH(Min);
         SET_DISPATCH(Mul);
 
         SET_DISPATCH(Div);

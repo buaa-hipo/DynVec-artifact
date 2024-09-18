@@ -136,6 +136,7 @@ class BinaryNode:public  Node{
 BINARY_DEFINE(Mult);
 BINARY_DEFINE(Div);
 BINARY_DEFINE(Add);
+BINARY_DEFINE(Min);
 
 class StoreNode: public Node{
 

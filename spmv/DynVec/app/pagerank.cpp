@@ -44,7 +44,7 @@ bool check_equal(const T * v1, const T * v2, const int num ) {
     for( int i = 0 ; i < num ; i++ ) {
         if( (v1[i]-v2[i])/v1[i] > 1e-3 || (v2[i]-v1[i])/v1[i] > 1e-3 ) {
             flag = false;
-           std::cout<< i<< " "  << v1[i]  << " "<< v2[i]<<"\n";
+            std::cout<< i<< " "  << v1[i]  << " "<< v2[i]<<"\n";
         }
     }
     if(flag) 
@@ -113,7 +113,8 @@ int main( int argc , char const * argv[] ) {
             printf("Erro: You need to modify a file to read\n");
             return 0;
         }
-        PageRankStructurePtr page_rank_structure_ptr = pagerank_read( argv[1]);
+        PageRankStructurePtr page_rank_structure_ptr = pagerank_read_mtx( argv[1]);
+        if (!page_rank_structure_ptr) return -1;
   
     
     float * sum = page_rank_structure_ptr->sum;

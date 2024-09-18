@@ -25,7 +25,9 @@ typedef enum{
     AddEquel = 17,
     Div = 18, 
     End = 19,
-    Comma = 20 } TokenType;
+    Comma = 20,
+    Min = 21,
+    MinEquel = 22 } TokenType;
 typedef struct Token {
     TokenType token_type_;
     std::string token_name_;
