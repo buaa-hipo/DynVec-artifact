@@ -4,6 +4,8 @@ CC=g++
 #CC=icpc
 #CFLAGS=-O3 -ffast-math `llvm-config --cflags` 
 #ARCH=core-avx2
+#ARCH=skylake-avx512
+ARCH=native
 PAPI_ROOT?=../papi-6.0.0/install/
 #ARCH=knl
 #LLVM_BASE?=../llvm-8.0.0/install/
@@ -22,10 +24,8 @@ CFLAGSPermitWarning=$(CFLAGS)
 INCLUDE_LLVM_DIR=`llvm-config --cxxflags` 
 #CFLAGS=-g -ffast-math `llvm-config --cflags`
 LD=g++ 
-#LD=clang++
 #LD=icpc
-#LDFLAGS= -L${LLVM_LIB} -ffast-math  `llvm-config --cxxflags --ldflags --libs core executionengine  mcjit interpreter analysis native bitwriter --system-libs`   -rdynamic -llzma -std=c++14 -L$(PAPI_ROOT)/lib -lpapi
-LDFLAGS= -L${LLVM_LIB} -ffast-math  `llvm-config --cxxflags --ldflags --libs core executionengine  mcjit interpreter analysis native bitwriter --system-libs`   -rdynamic -llzma -std=c++14 -L$(PAPI_ROOT)/lib 
+LDFLAGS= -fopenmp -L${LLVM_LIB} -ffast-math -lpthread `llvm-config --cxxflags --ldflags --libs core executionengine  mcjit interpreter analysis native bitwriter --system-libs`   -rdynamic -llzma -std=c++11 -L$(PAPI_ROOT)/lib -lpapi
 LINK_DIR=build/ 
 
 AR=ar
