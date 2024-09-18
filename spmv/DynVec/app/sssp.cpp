@@ -171,7 +171,7 @@ int main(int argc, char const *argv[])
         printf("Erro: You need to modify a file to read\n");
         return 0;
     }
-    csrSparseMatrixPtr sparseMatrixPtr = matrix_read_csr(argv[1]);
+    csrSparseMatrixPtr<double> sparseMatrixPtr = matrix_read_csr<double>(argv[1]);
     if (sparseMatrixPtr == NULL)
     {
         printf("Error: sparse matrix not supported\n");
