@@ -163,7 +163,7 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
 
         permvar_int_512_ = llvm::Intrinsic::getDeclaration( mod_ptr_.get() , llvm::Intrinsic::x86_avx512_permvar_si_512);
 
-        //permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx512_permvar_df_512);
+        permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx512_permvar_df_512);
         permvar_float_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx512_permvar_sf_512);
 
         //permvar_float_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::x86_avx2_permps);
@@ -267,11 +267,13 @@ LLVMCodeGen::LLVMCodeGen(const int vector):vector__(vector) {
         Null_ = llvm::Constant::getNullValue( t_int_ );
 
         fprintf(stderr, "before permvar\n");
+        #ifdef __SVE__ || __SVE512__
         permvar_int_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_int_vec_});
         permvar_float_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_float_vec_});
         //permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {});
         permvar_double_512_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_tbl, {t_double_vec_});
         insert_int_256_ = llvm::Intrinsic::getDeclaration(mod_ptr_.get(), llvm::Intrinsic::aarch64_sve_insr, {t_int64_vec_, t_int64_});
+        #endif
 
         
         fprintf(stderr, "after permvar\n");
@@ -711,10 +713,10 @@ llvm::Value * LLVMCodeGen::CodeGen_(Shuffle * stat) {
         int lanes = stat_v1_type.get_lanes();
         if( lanes == VECTOR8 && base_data_type == DOUBLE  ) {
             //llvm::Value * index8_vec = build_ptr_->CreateBitCast( index_value, t_int8_vec_ ); 
-            #if defined __AVX2__ || defined __AVX512CD__
-            llvm::Value * index_vec = build_ptr_->CreateZExtOrBitCast( index_value, t_int_vec_ );
-            #elif defined __SVE__ || defined __SVE512__
+            #if defined __SVE__ || defined __SVE512__ || defined __AVX512CD__
             llvm::Value * index_vec = build_ptr_->CreateZExtOrBitCast( index_value, t_int64_vec_ );
+            #elif defined __AVX2__
+            llvm::Value * index_vec = build_ptr_->CreateZExtOrBitCast( index_value, t_int_vec_ );
             #else
             #error "Unknown IA";
             #endif
@@ -796,8 +798,13 @@ llvm::Value * LLVMCodeGen::CodeGen_(Reduce * stat) {
         }
     }
     llvm::Value * LLVMCodeGen::LLVMBroadCast( llvm::Value * value, const int lanes) {
-         //llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), lanes, false) );
+        #ifdef __AVX2__ || __AVX512CD__
+         llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), lanes, false) );
+         #elif defined __SVE__ || defined __SVE512__
          llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), 2, true) );
+         #endif
+         //llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), lanes, false) );
+        //  llvm::Constant* undef = llvm::UndefValue::get( llvm::VectorType::get(value->getType(), 2, true) );
         value = build_ptr_->CreateInsertElement(undef, value, Zero_);
         return build_ptr_->CreateShuffleVector(value, undef, ZeroVec_);
    
