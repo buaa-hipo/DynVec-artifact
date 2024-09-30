@@ -546,7 +546,10 @@ llvm::Value * LLVMCodeGen::CodeGen_(Scatter * stat) {
         if (type->isVectorTy()) {
             type = static_cast<llvm::VectorType*>(type)->getElementType();
         }
-        llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(type, addr_value, index_value);
+        // llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(type, addr_value, index_value);
+        llvm::Value * ptr_value = stat->get_data()->get_type() == __float_v
+	       	? build_ptr_->CreateInBoundsGEP(t_float_, addr_value, index_value)
+		: build_ptr_->CreateInBoundsGEP(type, addr_value, index_value);
         build_ptr_->CreateMaskedScatter(data_value,ptr_value,llvm::Align(alinements_),mask_value);
         return Null_;
     }
@@ -561,7 +564,10 @@ llvm::Value * LLVMCodeGen::CodeGen_(Gather * stat) {
     if (type->isVectorTy()) {
         type = static_cast<llvm::VectorType*>(type)->getElementType();
     }
-    llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(type, addr_value, index_value);
+    // llvm::Value * ptr_value = build_ptr_->CreateInBoundsGEP(type, addr_value, index_value);
+    llvm::Value * ptr_value =  stat->get_type() == __float_v 
+	    ? build_ptr_->CreateInBoundsGEP(t_float_, addr_value, index_value)
+	    : build_ptr_->CreateInBoundsGEP(type, addr_value, index_value);
     StateMent * mask_stat = stat->get_mask();
     llvm::Value * mask_value ;
     if( mask_stat ) {
@@ -572,7 +578,6 @@ llvm::Value * LLVMCodeGen::CodeGen_(Gather * stat) {
         if( stat->get_type() == __double_v ) {         
             return  build_ptr_->CreateMaskedGather(  t_double_vec_, ptr_value , llvm::Align(alinements_), mask_value , DZeroVec_);
         } else if( stat->get_type() == __float_v ) {
-        
             return  build_ptr_->CreateMaskedGather(  t_float_vec_, ptr_value , llvm::Align(alinements_), mask_value , FZeroVec_);
         } else if( stat->get_type() == __int_v ) { 
             return  build_ptr_->CreateMaskedGather(  t_int_vec_, ptr_value , llvm::Align(alinements_), mask_value , ZeroVec_);
